@@ -1,0 +1,24 @@
+{
+  "name": "isc-org-chart",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "author": "Cristian Grau <cristian.grau@sailpoint.com>",
+  "description": "SailPoint ISC UI plugin: a full-page org tree — runs standalone via the mock App Shell, or embedded in ISC via the real handshake.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sailpoint/ui-plugin-sdk": "^0.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "happy-dom": "^20.14.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  }
+}
