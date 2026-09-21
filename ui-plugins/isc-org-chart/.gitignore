@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build output — `npm run build` regenerates it before `sail ui-plugins upload`
+dist/
+
+# Vite caches
+.vite/
+*.local
+
+# Credentials / local env — `sail` keeps its own config in ~/.sailpoint
+.env
+.env.*
+.sailpoint/
+
+# Editor and OS cruft
+.DS_Store
+*.swp
+
+# Editor workspace settings
+.vscode/
