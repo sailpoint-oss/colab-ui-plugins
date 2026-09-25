@@ -84,7 +84,7 @@ export class CapabilityDemo implements OnDestroy {
   private sensorHeld = false;
   private destroyed = false;
   private readonly onFullscreenChange = (): void => {
-    const shell = document.getElementById('lab-shell');
+    const shell = document.getElementById('demo-shell');
     this.fullscreenActive.set(!!shell && document.fullscreenElement === shell);
   };
 
@@ -347,7 +347,7 @@ export class CapabilityDemo implements OnDestroy {
       return;
     }
 
-    const shell = document.getElementById('lab-shell');
+    const shell = document.getElementById('demo-shell');
     if (!shell?.requestFullscreen) {
       this.result.set(unsupportedResult('Element.requestFullscreen'));
       return;
