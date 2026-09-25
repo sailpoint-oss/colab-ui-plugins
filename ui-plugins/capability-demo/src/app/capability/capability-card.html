@@ -1,0 +1,20 @@
+<p-card>
+  <div class="card-head">
+    <h3>{{ def().title }}</h3>
+    <p-tag
+      [value]="badge().label"
+      [severity]="badge().label === 'Opt-in' ? 'warn' : 'success'"
+      [pTooltip]="badge().tooltip"
+      tooltipPosition="left"
+    />
+  </div>
+
+  @if (code(); as fragment) {
+    <details class="declare">
+      <summary>What to declare</summary>
+      <pre><code>{{ fragment }}</code></pre>
+    </details>
+  }
+
+  <app-capability-demo [def]="def()" [hostUrl]="hostUrl()" />
+</p-card>
