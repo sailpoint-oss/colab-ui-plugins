@@ -13,12 +13,20 @@
 
 [New to the CoLab? Click here »](https://developer.sailpoint.com/discuss/t/about-the-sailpoint-developer-community-colab/11230)
 
+## Catalog
+
+| Plugin | Description |
+|---|---|
+| [Workflow Launcher Demo](ui-plugins/workflow-launcher-demo) | A plugin that lists the interactive-workflow launchers assigned to you and starts one from inside the iframe. |
+
 <!-- CONTRIBUTING -->
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-If you have a suggestion that would make a transform in this repository better, please fork the repo and create a pull request for the transform you want to contribute to. You can also simply open an issue with the tag `enhancement`.
+This repository is for **UI plugin authors**. Pull requests should add or improve examples, teaching demos, and small utilities that show how some part of UI plugins works. Share polished, production-ready plugins on the SailPoint Marketplace.
+
+If you have a suggestion that would make an example in this repository clearer, fork the repo and open a pull request, or open an issue with the tag `enhancement`.
 Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
