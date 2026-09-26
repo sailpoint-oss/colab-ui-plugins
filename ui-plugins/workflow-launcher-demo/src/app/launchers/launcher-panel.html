@@ -1,0 +1,67 @@
+<section aria-labelledby="launchers-heading">
+  <div class="section-head">
+    <h2 id="launchers-heading">Available workflows</h2>
+    <p-button
+      type="button"
+      label="Refresh"
+      size="small"
+      [outlined]="true"
+      [loading]="loading()"
+      [disabled]="!apiReady()"
+      (onClick)="refresh()"
+    />
+  </div>
+  <p class="section-lead">Choose a workflow to start.</p>
+
+  @if (!apiReady()) {
+    <p-message severity="info">Connecting to Identity Security Cloud…</p-message>
+  }
+
+  @if (loadError()) {
+    <p-message severity="error">Could not load workflows: {{ loadError() }}</p-message>
+  }
+
+  @if (isEmpty()) {
+    <p-message severity="secondary">No workflows are assigned to you.</p-message>
+  }
+
+  <div class="card-stack">
+    @for (launcher of items(); track launcher.id) {
+      <p-card>
+        <div class="card-head">
+          <h3>{{ launcher.name }}</h3>
+          @if (launcher.disabled) {
+            <p-tag value="Disabled" severity="danger" />
+          }
+        </div>
+        @if (launcher.description) {
+          <p class="description">{{ launcher.description }}</p>
+        }
+        <p-button
+          type="button"
+          label="Start workflow"
+          [loading]="launchingId() === launcher.id"
+          [disabled]="launcher.disabled || launchingId() !== null"
+          (onClick)="launch(launcher)"
+        />
+
+        @if (lastLaunch(); as result) {
+          @if (result.launcherId === launcher.id) {
+            @if (result.ok) {
+              <p-message severity="success">
+                <span>
+                  Workflow started.
+                  @if (result.url) {
+                    <a [href]="result.url" target="_blank" rel="noopener noreferrer">Open in Launchpad</a>.
+                  }
+                </span>
+              </p-message>
+            } @else {
+              <p-message severity="error">Could not start the workflow: {{ result.error }}</p-message>
+            }
+          }
+        }
+      </p-card>
+    }
+  </div>
+</section>

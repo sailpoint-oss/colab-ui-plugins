@@ -1,0 +1,28 @@
+{
+    "version": 1,
+    "manifest": {
+        "alias": "workflow-launcher-demo",
+        "name": {
+            "en": "Workflow Launcher Demo"
+        },
+        "description": {
+            "en": "Lists interactive workflow launchers assigned to you and starts one from a UI plugin."
+        },
+        "apiScopes": [
+            "sp:scopes:all"
+        ],
+        "contentSecurityPolicies": {},
+        "permissionPolicy": {},
+        "iframeAllow": {},
+        "state": "ENABLED",
+        "slots": [
+            {
+                "slotId": "full-page"
+            }
+        ]
+    },
+    "build": {
+        "outDir": "./dist/workflow-launcher-demo/browser",
+        "port": 4200
+    }
+}
