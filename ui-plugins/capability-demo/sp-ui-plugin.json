@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "manifest": {
+        "alias": "capability-demo",
+        "name": {
+            "en": "UI Plugin Capability Demo"
+        },
+        "description": {
+            "en": "Live demos of UI plugin iframe sandbox, iframeAllow, and permissionPolicy capabilities."
+        },
+        "apiScopes": [
+            "sp:scopes:all"
+        ],
+        "contentSecurityPolicies": {},
+        "permissionPolicy": {
+            "camera": ["'self'"],
+            "microphone": ["'self'"],
+            "geolocation": ["'self'"],
+            "gyroscope": ["'self'"],
+            "accelerometer": ["'self'"],
+            "magnetometer": ["'self'"],
+            "fullscreen": ["'self'"],
+            "clipboard-write": ["'self'"],
+            "clipboard-read": ["'self'"]
+        },
+        "iframeAllow": {
+            "camera": ["'src'"],
+            "microphone": ["'src'"],
+            "geolocation": ["'src'"],
+            "gyroscope": ["'src'"],
+            "accelerometer": ["'src'"],
+            "magnetometer": ["'src'"],
+            "fullscreen": ["'src'"],
+            "clipboard-write": ["'src'"],
+            "clipboard-read": ["'src'"]
+        },
+        "state": "ENABLED",
+        "slots": [
+            {
+                "slotId": "full-page"
+            }
+        ]
+    },
+    "build": {
+        "outDir": "./dist/capability-demo/browser",
+        "port": 4200
+    }
+}

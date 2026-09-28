@@ -1,0 +1,29 @@
+/* You can add global styles to this file, and also import other style files */
+
+// PrimeNG is the chosen component library for SailPoint UI plugins.
+//
+// ISC-compatible design tokens and the PrimeNG theme preset will be provided
+// by the @sailpoint/sds (SailPoint Design System) package once available.
+// provideSds() in app.config.ts will auto-configure PrimeNG theming.
+//
+// Import PrimeNG theme styles here once provideSds is wired in app.config.ts:
+//   @import "primeng/resources/themes/<theme>/theme.css";  // if using legacy styled mode
+//   or configure a preset theme via providePrimeNG / provideSds in app.config.ts.
+//
+//
+// Placeholder to ensure the compiled stylesheet is not empty.
+// This prevents file upload errors during early deployment phases.
+:root {
+  --placeholder-for-design-tokens: true;
+  color-scheme: light;
+  background: #ffffff;
+  color: #172033;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #ffffff;
+  color: #172033;
+}

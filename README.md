@@ -18,6 +18,7 @@
 | Plugin | Description |
 |---|---|
 | [Identity Globe](ui-plugins/identity-globe) | A plugin that plots identities on a globe from their city, and filters them by country, department, and title. |
+| [UI Plugin Capability Demo](ui-plugins/capability-demo) | A plugin that shows each iframe capability a UI plugin can use, with live demos for sandbox, `iframeAllow`, and `permissionPolicy`. |
 
 <!-- CONTRIBUTING -->
 ## Contributing

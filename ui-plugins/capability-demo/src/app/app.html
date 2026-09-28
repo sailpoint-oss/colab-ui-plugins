@@ -1,0 +1,25 @@
+<div id="demo-shell">
+  <header class="hero">
+    <h1>UI Plugin Capability Demo</h1>
+    <p class="lead">
+      Everything a UI plugin can do inside its iframe. Each card explains the capability, shows what
+      to declare, and runs a live demo.
+    </p>
+    <p class="privacy-note">
+      Demos for camera, microphone, location, and clipboard never upload what they capture.
+    </p>
+  </header>
+
+  <section aria-labelledby="capabilities-heading">
+    <h2 id="capabilities-heading">Available capabilities</h2>
+    <div class="card-stack">
+      @for (def of capabilities; track def.id) {
+        <app-capability-card [def]="def" [hostUrl]="hostUrl()" />
+      }
+    </div>
+  </section>
+
+  <div class="camera-scroll-space" aria-hidden="true"></div>
+
+  <router-outlet />
+</div>

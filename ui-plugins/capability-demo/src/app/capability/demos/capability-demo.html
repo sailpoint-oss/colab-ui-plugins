@@ -1,0 +1,127 @@
+@if (def().demo === 'top-navigation') {
+  <p-button
+    label="Open MySailPoint in this tab"
+    [disabled]="hostDemosDisabled()"
+    (onClick)="openMySailPointTop()"
+  />
+  @if (hostDemosDisabled()) {
+    <p>{{ hostDisabledReason() }}</p>
+  }
+}
+
+@if (def().demo === 'popup-new-tab') {
+  @if (hostDemosDisabled()) {
+    <p>{{ hostDisabledReason() }}</p>
+  } @else {
+    <a
+      pButton
+      label="Open MySailPoint in a new tab"
+      [href]="hostUrl()"
+      target="_blank"
+      rel="noopener noreferrer"
+    ></a>
+  }
+}
+
+@if (def().demo === 'download') {
+  <p-button label="Download sample file" (onClick)="downloadSample()" />
+}
+
+@if (def().demo === 'modals') {
+  <div class="demo-actions">
+    <p-button label="Alert" (onClick)="runAlert()" />
+    <p-button label="Confirm" (onClick)="runConfirm()" />
+    <p-button label="Prompt" (onClick)="runPrompt()" />
+    <p-button label="Print" (onClick)="runPrint()" />
+  </div>
+}
+
+@if (def().demo === 'clipboard') {
+  <div class="demo-actions">
+    <p-button label="Copy demo text" (onClick)="copyDemoText()" />
+    <p-button label="Read clipboard" (onClick)="readClipboard()" />
+  </div>
+  @if (clipboardOutput(); as output) {
+    <div class="output" aria-live="polite">
+      <span class="output-label">{{ output.label }}</span>
+      <pre class="output-value">{{ output.value }}</pre>
+    </div>
+  }
+}
+
+@if (def().demo === 'geolocation') {
+  <p-button label="Get location" (onClick)="getLocation()" />
+  @if (geoOutput(); as output) {
+    <div class="output" aria-live="polite">
+      <span class="output-label">{{ output.label }}</span>
+      <pre class="output-value">{{ output.value }}</pre>
+    </div>
+  }
+}
+
+@if (def().demo === 'camera') {
+  <p-button
+    [label]="cameraActive() ? 'Stop camera' : 'Start camera'"
+    (onClick)="toggleCamera()"
+  />
+  @if (cameraActive()) {
+    <video #preview autoplay playsinline muted></video>
+  }
+}
+
+@if (def().demo === 'microphone') {
+  <p-button
+    [label]="micActive() ? 'Stop listening' : 'Start listening'"
+    (onClick)="toggleMicrophone()"
+  />
+  @if (micActive()) {
+    <div class="output" aria-live="polite">
+      <span class="output-label">Volume</span>
+      <pre class="output-value">Level: {{ micLevel() }}</pre>
+    </div>
+  }
+}
+
+@if (def().demo === 'device-sensors') {
+  <div class="demo-actions">
+    <p-button
+      [label]="sensorButtonLabel('gyroscope')"
+      [disabled]="sensorBusy()"
+      (onClick)="selectSensor('gyroscope')"
+    />
+    <p-button
+      [label]="sensorButtonLabel('accelerometer')"
+      [disabled]="sensorBusy()"
+      (onClick)="selectSensor('accelerometer')"
+    />
+    <p-button
+      [label]="sensorButtonLabel('magnetometer')"
+      [disabled]="sensorBusy()"
+      (onClick)="selectSensor('magnetometer')"
+    />
+  </div>
+  @if (sensorLiveValue(); as value) {
+    <div class="output" aria-live="polite">
+      <span class="output-label">{{ sensorLiveLabel() }}</span>
+      <pre class="output-value">{{ value }}</pre>
+    </div>
+  }
+}
+
+@if (def().demo === 'fullscreen') {
+  <p-button
+    [label]="fullscreenActive() ? 'Exit fullscreen' : 'Enter fullscreen'"
+    (onClick)="toggleFullscreen()"
+  />
+}
+
+@if (result(); as current) {
+  @if (current.ok) {
+    <p class="proof" aria-live="polite">{{ current.message }}</p>
+  } @else if (!sensorLiveValue()) {
+    <div class="output output-error" role="alert">
+      <span class="output-label">{{ errorLabel(current) }}</span>
+      <p class="output-value">{{ current.message }}</p>
+    </div>
+  }
+}
