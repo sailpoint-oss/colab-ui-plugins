@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.section-lead {
+  margin: 0.25rem 0 1rem;
+  color: var(--spds-text-muted-color);
+}
+
+.card-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.description {
+  margin: 0.25rem 0 1rem;
+  max-width: 60ch;
+  color: var(--spds-text-muted-color);
+}
+
+p-message {
+  display: block;
+  margin: 1rem 0;
+}
+
+p-card p-message {
+  margin-bottom: 0;
+}

@@ -1,0 +1,46 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  color: var(--spds-text-color);
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+
+.hero {
+  margin: 0 0 1.5rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--spds-content-border-color);
+  border-left: 5px solid var(--spds-primary-color);
+  border-radius: 0.75rem;
+  background: var(--spds-content-background);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.lead {
+  margin: 0;
+  max-width: 44rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--spds-text-muted-color);
+}
+
+code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  background: var(--spds-content-hover-background);
+  font-size: 0.9em;
+}

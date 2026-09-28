@@ -17,7 +17,8 @@
 
 | Plugin | Description |
 |---|---|
-| [UI Plugin Capability Demo](capability-demo) | A plugin that shows each iframe capability a UI plugin can use, with live demos for sandbox, `iframeAllow`, and `permissionPolicy`. |
+| [Capability Demo](ui-plugins/capability-demo) | A plugin that shows each iframe capability a UI plugin can use, with live demos for sandbox, `iframeAllow`, and `permissionPolicy`. |
+| [Workflow Launcher Demo](ui-plugins/workflow-launcher-demo) | A plugin that lists the interactive-workflow launchers assigned to you and starts one from inside the iframe. |
 
 <!-- CONTRIBUTING -->
 ## Contributing
