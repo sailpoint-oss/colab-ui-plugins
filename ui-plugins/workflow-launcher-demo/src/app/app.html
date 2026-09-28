@@ -1,0 +1,20 @@
+<div class="shell">
+  <header class="hero">
+    <h1>{{ title() }}</h1>
+    <p class="lead">
+      Start an interactive workflow assigned to you.
+    </p>
+    @if (status() === 'failed') {
+      <p class="note">
+        Open this plugin inside Identity Security Cloud with
+        <code>?spPluginDev=workflow-launcher-demo</code>.
+      </p>
+    } @else if (status() !== 'ready') {
+      <p class="note">Connecting to Identity Security Cloud…</p>
+    }
+  </header>
+
+  <app-launcher-panel />
+
+  <router-outlet />
+</div>
