@@ -1,0 +1,28 @@
+Moon textures
+=============
+
+Both files come from NASA's [CGI Moon Kit](https://svs.gsfc.nasa.gov/4720),
+built from Lunar Reconnaissance Orbiter data. NASA imagery is public domain:
+https://www.nasa.gov/nasa-brand-center/images-and-media/
+
+- `lunar-surface.webp` — 8192 × 4096, WebP quality 92
+
+Encoded from `lroc_color_poles_8k.tif`, the natural-color LROC wide-angle
+camera mosaic (Hapke normalized, gamma corrected, and white balanced in the
+CGI Moon Kit). The map is centered on 0° longitude, which matches the
+landing-site coordinates.
+
+- `lunar-bumpmap.webp` — 5760 × 2880, WebP quality 100
+
+Encoded from `ldem_16_uint.tif`, the LOLA global elevation grid at 16 pixels
+per degree. The 16-bit half-meter elevations were contrast-stretched to 8-bit
+grayscale for use as a bump map. The native width is already under 8192, so
+it is not upscaled.
+
+The landing-site list began with the globe.gl example. Chang'e 5 and Chang'e 6
+were added from published landing coordinates:
+https://www.sciencedirect.com/science/article/abs/pii/S0012821X2100114X
+https://www.nature.com/articles/s41467-025-59443-5
+
+The example code is MIT licensed:
+https://github.com/vasturiano/globe.gl

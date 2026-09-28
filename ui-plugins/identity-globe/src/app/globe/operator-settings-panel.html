@@ -1,0 +1,134 @@
+<section class="settings-panel" aria-labelledby="settings-title">
+  <header>
+    <h1 id="settings-title">Identity Globe Settings</h1>
+    <button type="button" class="icon-button" aria-label="Close settings" (click)="requestClose()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit($event)">
+    @if (attributesLoading()) {
+      <p class="attribute-status">Loading identity attributes...</p>
+    } @else if (attributesError()) {
+      <p class="attribute-status attribute-status--error">{{ attributesError() }}</p>
+    }
+
+    <div class="form-group">
+      <div class="field-heading">
+        <label for="locationAttribute">City Attribute</label>
+        <small>
+          The identity's city (e.g. Austin, TX). Coordinates from
+          <a href="https://www.geonames.org/" target="_blank" rel="noopener noreferrer">GeoNames</a>,
+          <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>,
+          filtered.
+        </small>
+      </div>
+      <select id="locationAttribute" formControlName="locationAttribute">
+        @if (showMissingAttribute(form.controls.locationAttribute.value)) {
+          <option value=""></option>
+        }
+        @for (attribute of attributeChoices(); track attribute.name) {
+          <option [value]="attribute.name">{{ attribute.label }}</option>
+        }
+      </select>
+      @if (showMissingAttribute(form.controls.locationAttribute.value)) {
+        <p class="field-error">An attribute must be selected.</p>
+      }
+    </div>
+
+    <div class="form-group">
+      <div class="field-heading">
+        <label for="breakdownAttribute">City Chart Attribute</label>
+        <small>The Search attribute broken down in the pie chart shown when you click a city.</small>
+      </div>
+      <select id="breakdownAttribute" formControlName="breakdownAttribute">
+        @if (showMissingAttribute(form.controls.breakdownAttribute.value)) {
+          <option value=""></option>
+        }
+        @for (attribute of attributeChoices(); track attribute.name) {
+          <option [value]="attribute.name">{{ attribute.label }}</option>
+        }
+      </select>
+      @if (showMissingAttribute(form.controls.breakdownAttribute.value)) {
+        <p class="field-error">An attribute must be selected.</p>
+      }
+    </div>
+
+    <div class="facets-section">
+      <div class="facets-header">
+        <div class="facets-heading">
+          <h2>Filter Facets</h2>
+          <small>The Search attributes used to filter identities on the globe.</small>
+        </div>
+        <button type="button" class="add-button" (click)="addFacet()">Add Facet</button>
+      </div>
+
+      <div formArrayName="facets" class="facets-list">
+        @for (facet of facets.controls; track facet; let i = $index) {
+          <div [formGroupName]="i" class="facet-item">
+            <div class="form-group facet-fields">
+              <label [for]="'attribute-' + i">Attribute</label>
+              <select [id]="'attribute-' + i" formControlName="attribute">
+                @if (showMissingAttribute(facet.get('attribute')?.value)) {
+                  <option value=""></option>
+                }
+                @for (attribute of facetAttributeChoices(i); track attribute.name) {
+                  <option [value]="attribute.name">{{ attribute.label }}</option>
+                }
+              </select>
+              @if (showMissingAttribute(facet.get('attribute')?.value)) {
+                <p class="field-error">An attribute must be selected.</p>
+              }
+            </div>
+            <button type="button" class="remove-button" aria-label="Remove facet" (click)="removeFacet(i)">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        } @empty {
+          <p class="empty-facets">
+            There are no filter facets. Click
+            <button type="button" class="add-button add-button--inline" (click)="addFacet()">Add Facet</button>
+            to add one.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="secondary-button danger-button" (click)="reset()">Reset</button>
+      <div class="form-actions-end">
+        <button type="button" class="submit-button" [disabled]="!fieldsReady()" (click)="onSubmit()">Save</button>
+      </div>
+    </div>
+  </form>
+
+  @if (confirmation(); as pending) {
+    <div class="confirm-backdrop">
+      <section
+        class="confirm-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        aria-describedby="confirm-message"
+      >
+        @if (pending === 'reset') {
+          <h2 id="confirm-title">Reset settings?</h2>
+          <p id="confirm-message">
+            This deletes all Identity Globe settings stored in this browser and reloads the plugin.
+          </p>
+        } @else {
+          <h2 id="confirm-title">Unsaved changes</h2>
+          <p id="confirm-message">Close settings without saving?</p>
+        }
+        <div class="confirm-actions">
+          <button type="button" class="secondary-button" (click)="dismissConfirmation()">Cancel</button>
+          @if (pending === 'reset') {
+            <button type="button" class="secondary-button danger-button" (click)="confirmPending()">Reset</button>
+          } @else {
+            <button type="button" class="submit-button" (click)="confirmPending()">Close</button>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

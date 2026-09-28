@@ -1,0 +1,86 @@
+# Globe texture attribution
+
+These files are copied into the plugin bundle and served from the plugin's own origin.
+No runtime request is made to the sources below.
+
+Each texture is stored as WebP and kept at or below 8192 × 4096.
+
+## Earth
+
+- `earth-blue-marble.webp` — 8192 × 4096, WebP quality 100
+
+Resampled (Lanczos) from the 2 km global composite
+`world.topo.bathy.200407.3x21600x10800.jpg` in NASA's
+[Blue Marble: Next Generation](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/)
+series — the July 2004 base map with topography and bathymetry shading.
+Produced by Reto Stöckli; NASA imagery is public domain.
+Source file:
+https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73751/world.topo.bathy.200407.3x21600x10800.jpg
+
+The native image is 21600 × 10800, so it is downsampled to 8K rather than shipped as published.
+
+Credit: NASA Earth Observatory.
+
+## Topology
+
+- `earth-topology.webp` — 8192 × 4096, WebP quality 100
+
+Resampled (Lanczos) from NASA Earth Observatory's grayscale elevation image
+`gebco_08_rev_elev_21600x10800.png`, derived from the GEBCO bathymetry and
+topography compilation:
+https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73934/gebco_08_rev_elev_21600x10800.png
+Used as a bump map only: it shades terrain, it does not displace the sphere.
+NASA imagery is public domain. GEBCO asks that the compilation be acknowledged.
+
+Credit: NASA Earth Observatory; GEBCO.
+
+## Star field
+
+Both files are from NASA Scientific Visualization Studio
+[Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851). Each linear OpenEXR
+image was converted to 8-bit sRGB (gamma 2.2). NASA imagery is public domain.
+Earth always uses the plain star field. The Moon uses that same field, and
+switches to the Milky Way version while Clouds is on.
+
+- `night-sky.webp` — 8192 × 4096, WebP quality 100
+
+`hiptyc_2020_8k.exr`, the brighter Hipparcos and Tycho stars without the
+Milky Way.
+
+- `night-sky-milky-way.webp` — 8192 × 4096, WebP quality 92
+
+`starmap_2020_8k.exr`, the same stars plus the faint Gaia stars that draw the
+Milky Way.
+
+Credit: NASA Scientific Visualization Studio.
+
+## Clouds
+
+- `clouds.webp` — 8192 × 4096, optional overlay, off unless the user enables it
+
+Transparent fair-weather cloud map published on Wikimedia Commons under CC0:
+https://commons.wikimedia.org/wiki/File:Transparent_Fair_Weather_Clouds_Map.png
+That file was made from Tom Patterson's
+[Natural Earth III](https://shadedrelief.com/natural3/pages/clouds.html)
+fair-weather cloud map, edited from the NASA Blue Marble cloud layer.
+Natural Earth III is in the [public domain](https://shadedrelief.com/natural3/pages/use.html).
+The color is WebP quality 100. The alpha plane is WebP quality 73. The overlay
+is not drawn until the Clouds toggle is turned on.
+
+Credit: Tom Patterson, www.shadedrelief.com; NASA. Transparent version dedicated
+to the public domain (CC0) by GabrielGGD.
+
+## Night lights
+
+- `earth-night.webp` — 8192 × 4096, WebP quality 100
+
+Resampled (Lanczos) from NASA's 2016 Black Marble color composite
+`BlackMarble_2016_3km.jpg` (13500 × 6750, about 3 km per pixel):
+https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg
+https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/
+The source is public-domain imagery from the Suomi NPP VIIRS day/night band,
+published by NASA Earth Observatory. It is downsampled to 8K so it matches the
+daytime Blue Marble. Used only while Day and night is on, paired with
+`earth-blue-marble.webp` as the day side.
+
+Credit: NASA Earth Observatory.
