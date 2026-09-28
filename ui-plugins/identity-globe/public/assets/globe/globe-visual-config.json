@@ -1,0 +1,60 @@
+{
+  "colors": {
+    "locationFill": "#cc27b0",
+    "locationFillLight": "#d650bf",
+    "locationFillStops": ["#d650bf", "#cc27b0", "#ad2196"],
+    "locationFillEasing": "log",
+    "locationAltitudeScale": 0.02,
+    "arcColorStops": ["#00b5e2", "#1d5ade", "#38d9f5", "#00b5e2"],
+    "title": "#ffffff",
+    "departmentPalette": ["#00b5e2", "#753bbd", "#93d500", "#26c8a1", "#0074d9", "#1d5ade"],
+    "tokens": {
+      "locationFill": "--hz-tw-pink-500",
+      "locationFillLight": "--hz-tw-pink-400",
+      "locationFillStops": [
+        "--hz-tw-pink-400",
+        "--hz-tw-pink-500",
+        "--hz-tw-pink-600"
+      ],
+      "arcColorStops": ["--color-a1", "--color-p3", "dark-theme cyan", "--color-a1"],
+      "title": "--color-text-light",
+      "departmentPalette": [
+        "--color-a1",
+        "--color-p2",
+        "--color-s1",
+        "--color-s2",
+        "--color-p1",
+        "--color-p3"
+      ]
+    }
+  },
+  "arcs": {
+    "sameCountryAllowed": false,
+    "weightByIdentityCount": true,
+    "maxConcurrent": 12,
+    "spawnIntervalMs": 700,
+    "dashLength": 0.4,
+    "dashGap": 0.15,
+    "dashAnimateTimeMs": 2000,
+    "altitudeAutoScale": true
+  },
+  "globe": {
+    "autoRotateSpeed": 0.35,
+    "initialLat": 15,
+    "initialLng": -74,
+    "initialAltitude": 2.5,
+    "labelSizeScale": 0.06,
+    "labelMinSize": 0.3,
+    "labelMaxSize": 1.4,
+    "pointResolution": 2
+  },
+  "glow": {
+    "enabled": true,
+    "color": "#e9a2dd",
+    "sizeScale": 4,
+    "opacity": 0.55,
+    "tokens": {
+      "color": "--hz-tw-pink-200"
+    }
+  }
+}

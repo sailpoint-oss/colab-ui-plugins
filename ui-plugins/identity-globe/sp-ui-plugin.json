@@ -1,0 +1,31 @@
+{
+    "version": 1,
+    "manifest": {
+        "alias": "identity-globe",
+        "name": {
+            "en": "Identity Globe"
+        },
+        "description": {
+            "en": "Plots identities on a globe from their city, and filters them by country, department, and title."
+        },
+        "apiScopes": [
+            "sp:scopes:all"
+        ],
+        "contentSecurityPolicies": {},
+        "permissionPolicy": {
+        },
+        "iframeAllow": {
+        },
+        "state": "ENABLED",
+        "slots": [
+            {
+                "slotId": "full-page",
+                "requiredCapabilities": ["ORG_ADMIN"]
+            }
+        ]
+    },
+    "build": {
+        "outDir": "./dist/identity-globe/browser",
+        "port": 4200
+    }
+}

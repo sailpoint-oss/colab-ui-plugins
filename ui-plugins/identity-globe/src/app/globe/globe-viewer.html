@@ -1,0 +1,91 @@
+<div
+  #container
+  class="globe-canvas"
+  [class.globe-canvas--blurred]="blurred()"
+  [class.globe-canvas--swap]="swapping()"  [attr.aria-busy]="swapping() ? true : null"
+  role="img"
+  tabindex="0"
+  aria-label="Interactive globe showing aggregated identity locations"
+  (pointerdown)="stopAutoRotate()"
+  (wheel)="stopAutoRotate()"
+  (document:pointerdown)="onDocumentPointerDown($event)"
+  (document:keydown.escape)="dismissTooltip(true)"
+></div>
+
+@if (selected(); as location) {
+  <section
+    #tooltip
+    class="location-tooltip"
+    [style.left.px]="tooltipPosition().x"
+    [style.top.px]="tooltipPosition().y"
+    tabindex="0"
+    aria-live="polite"
+    aria-label="Selected identity location"
+  >
+    <header>
+      <h2>
+          @if (locationSearchUrl(location); as href) {
+          <a [href]="href" target="_blank" rel="noopener noreferrer">
+            {{ location.displayName }}
+          </a>
+        } @else {
+          {{ location.displayName }}
+        }
+      </h2>
+      <button
+        type="button"
+        class="tooltip-close"
+        aria-label="Close location details"
+        (click)="dismissTooltip(true)"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </header>
+    @if (moonLanding(location); as landing) {
+      <p>{{ landing.agency ? landing.agency + ' · ' + landing.program : landing.program }}</p>
+      <p>
+        @if (landing.date) {
+          Landed {{ landingDate(landing.date) }} ·
+        }
+        <a [href]="landing.url" target="_blank" rel="noopener noreferrer">
+          {{ landing.date ? 'Mission details' : 'Details' }}
+        </a>
+      </p>
+    }
+    @if (location.count > 0) {
+      <p>{{ location.count }} {{ location.count === 1 ? 'identity' : 'identities' }}</p>
+      <div
+        class="department-pie"
+        role="img"
+        [attr.aria-label]="breakdownSummary(location)"
+        [style.background]="breakdownPie(location)"
+      ></div>
+      <ul>
+        @for (entry of breakdownEntries(location); track entry.name) {
+          <li>
+            <span
+              class="department-key"
+              aria-hidden="true"
+              [style.background-color]="entry.color"
+            ></span>
+            @if (breakdownSearchUrl(location, entry.name); as href) {
+              <a class="department-link" [href]="href" target="_blank" rel="noopener noreferrer">
+                <span>{{ entry.name }}</span>
+                <strong>{{ entry.count }}</strong>
+              </a>
+            } @else {
+              <span>{{ entry.name }}</span>
+              <strong>{{ entry.count }}</strong>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (renderError()) {
+  <div class="webgl-error" role="alert">
+    {{ renderError() }}
+  </div>
+}

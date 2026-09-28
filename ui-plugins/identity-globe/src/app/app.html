@@ -1,0 +1,117 @@
+@if (status() === 'failed') {
+  <main class="connection-state">
+    <section class="connection-card" aria-labelledby="connection-error-title">
+      <h1 id="connection-error-title">Identity Globe could not connect</h1>
+      <p>
+        Open this plugin inside SailPoint Identity Security Cloud. For local
+        development, open the tenant with
+        <code>?spPluginDev=identity-globe</code>.
+      </p>
+    </section>
+  </main>
+} @else if (status() === 'ready') {
+  <main
+    class="globe-shell"
+    [style.--globe-title-color]="visualConfig()?.colors?.title"
+    (document:keydown.escape)="onEscape()"
+  >
+    @if (visualConfig(); as config) {
+      <app-globe-viewer
+        [locations]="locations()"
+        [config]="config"
+        [blurred]="startupOverlay()"
+        [pageRoute]="pageRoute()"
+        [facetSelection]="selection()"
+      />
+      @if (startupOverlay()) {
+        <section
+          class="connection-card load-panel"
+          aria-labelledby="load-title"
+          aria-describedby="load-description"
+        >
+          <h1 id="load-title">{{ loadHeading }}</h1>
+          <p id="load-description">
+            {{ productBlurb }}
+          </p>
+          <p class="visually-hidden" role="status" aria-live="polite">
+            {{ loadStatus() }}
+          </p>
+          <progress [value]="loadBar().value" [max]="loadBar().max"></progress>
+        </section>
+      } @else {
+        <div class="title-panel">
+          <h1 class="globe-title">{{ title }}</h1>
+          <div class="title-actions">
+            @if (hasFilterFacets() && !drawerOpen()) {
+              <button
+                type="button"
+                class="facet-trigger"
+                aria-controls="identity-filters"
+                aria-expanded="false"
+                (click)="drawerOpen.set(true)"
+              >
+                <span aria-hidden="true">☰</span>
+                <span>Filters</span>
+              </button>
+            }
+            <button
+              type="button"
+              class="facet-trigger"
+              aria-controls="operator-settings"
+              (click)="settingsOpen.set(true)"
+            >
+              <span aria-hidden="true">⚙</span>
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+        <div class="hud-stack">
+          <p class="progress" role="status" aria-live="polite">
+            {{ progressLabel() }}
+          </p>
+          <app-view-toggles />
+        </div>
+        @if (hasFilterFacets() && drawerOpen()) {
+          <app-facet-drawer
+            [options]="facetOptions()"
+            [selection]="selection()"
+            (toggleFacet)="toggleFacet($event)"
+            (clear)="clearFilters()"
+            (close)="closeDrawer()"
+          />
+        }
+        @if (settingsOpen()) {
+          <app-operator-settings-panel
+            (close)="settingsOpen.set(false)"
+            (save)="onSettingsSaved()"
+            (clear)="onSettingsCleared()"
+          />
+        }
+      }
+      @if (loadError()) {
+        <p class="load-error" role="alert">{{ loadError() }}</p>
+      }
+    } @else if (loadError()) {
+      <section class="connection-card" aria-labelledby="configuration-error-title">
+        <h1 id="configuration-error-title">Identity Globe is unavailable</h1>
+        <p>{{ loadError() }}</p>
+      </section>
+    } @else {
+      <section class="connection-card load-panel" aria-labelledby="config-load-title">
+        <h1 id="config-load-title">{{ loadHeading }}</h1>
+        <p>{{ productBlurb }}</p>
+        <p class="visually-hidden" role="status" aria-live="polite">
+          {{ loadStatus() }}
+        </p>
+        <progress [value]="loadBar().value" [max]="loadBar().max"></progress>
+      </section>
+    }
+  </main>
+} @else {
+  <main class="connection-state">
+    <section class="connection-card" aria-label="Connecting to SailPoint">
+      <h1>Identity Globe</h1>
+      <p role="status">Connecting to SailPoint Identity Security Cloud…</p>
+    </section>
+  </main>
+}

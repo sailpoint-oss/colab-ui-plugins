@@ -1,0 +1,170 @@
+:host {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: #000;
+}
+
+.globe-canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  transition: filter 240ms ease;
+}
+
+.globe-canvas--blurred {
+  filter: blur(0.55rem);
+  pointer-events: none;
+}
+
+// Ramp length matches SWAP_RAMP_MS in globe-viewer.ts.
+.globe-canvas--swap {
+  filter: blur(0.65rem);
+  pointer-events: none;
+  transition: filter 200ms ease-in-out;
+}
+
+.location-tooltip {
+  position: absolute;
+  z-index: 4;
+  width: min(18rem, calc(100% - 2rem));
+  max-height: min(28rem, calc(100% - 2rem));
+  padding: 0.9rem;
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 0.75rem;
+  color: #fff;
+  background: rgb(3 11 22 / 92%);
+  box-shadow: 0 0.8rem 2.5rem rgb(0 0 0 / 55%);
+  transform: translate(0.8rem, -50%);
+}
+
+.location-tooltip:focus-visible {
+  outline: 0.2rem solid #38d9f5;
+  outline-offset: 0.15rem;
+}
+
+.location-tooltip h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.location-tooltip a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.location-tooltip a:hover,
+.location-tooltip a:focus-visible {
+  color: #a4ebf8;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.location-tooltip a:focus-visible {
+  border-radius: 0.15rem;
+  outline: 0.15rem solid #38d9f5;
+  outline-offset: 0.1rem;
+}
+
+.location-tooltip header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tooltip-close {
+  display: grid;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  background: transparent;
+  cursor: pointer;
+  place-items: center;
+}
+
+.tooltip-close:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.tooltip-close:focus-visible {
+  outline: 0.15rem solid #38d9f5;
+  outline-offset: 0.1rem;
+}
+
+.location-tooltip p {
+  margin: 0.2rem 0 0.75rem;
+}
+
+.department-pie {
+  width: 5.5rem;
+  height: 5.5rem;
+  margin: 0 auto 0.8rem;
+  border: 0.15rem solid rgb(255 255 255 / 28%);
+  border-radius: 50%;
+}
+
+.location-tooltip ul {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.location-tooltip li {
+  display: grid;
+  grid-template-columns: 0.65rem 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.department-key {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.department-link {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.webgl-error {
+  position: absolute;
+  z-index: 5;
+  inset: 50% auto auto 50%;
+  width: min(32rem, calc(100% - 2rem));
+  padding: 1rem;
+  border: 1px solid #ff8d9a;
+  border-radius: 0.75rem;
+  color: #fff;
+  background: rgb(0 0 0 / 90%);
+  transform: translate(-50%, -50%);
+}
+
+@media (width <= 40rem) {
+  .location-tooltip {
+    top: auto !important;
+    right: 1rem;
+    bottom: 4rem;
+    left: 1rem !important;
+    width: auto;
+    max-height: 42%;
+    transform: none;
+  }
+}

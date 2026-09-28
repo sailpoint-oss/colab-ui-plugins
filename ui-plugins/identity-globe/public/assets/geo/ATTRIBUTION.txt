@@ -1,0 +1,8 @@
+# Gazetteer attribution
+
+`cities.json` is derived from [GeoNames](https://www.geonames.org/)
+(`cities15000`, `admin1CodesASCII`, and `countryInfo`), licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+The included places are filtered, and the names and coordinates are normalized.
+The raw GeoNames dumps are not included.

@@ -1,0 +1,49 @@
+<aside id="identity-filters" class="facet-drawer" aria-label="Filter identity locations">
+  <header>
+    <h2>Filter identities</h2>
+    <button type="button" class="icon-button" aria-label="Close filters" (click)="close.emit()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </header>
+
+  <button
+    type="button"
+    class="clear-button"
+    [disabled]="!hasSelection()"
+    (click)="clear.emit()"
+  >
+    Clear filters
+  </button>
+
+  <div class="facet-groups">
+    @for (group of groups(); track group.key) {
+      <details
+        [open]="expandedGroup() === group.key"
+      >
+        <summary (click)="toggleGroup($event, group.key)">
+          <span>{{ group.label }}</span>
+          @if (selection()[group.key] && selection()[group.key].length > 0) {
+            <span class="selection-count">{{ selection()[group.key].length }}</span>
+          }
+          <span class="facet-chevron" aria-hidden="true">›</span>
+        </summary>
+        <ul>
+          @for (option of group.options; track option.label) {
+            <li>
+              <label [class.facet-option--unavailable]="option.count === 0">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked(group.key, option.label)"
+                  [disabled]="option.count === 0 && !isChecked(group.key, option.label)"
+                  (change)="onToggle(group.key, option.label, $event)"
+                />
+                <span class="option-label">{{ option.label }}</span>
+                <span class="option-count">{{ option.count.toLocaleString() }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+      </details>
+    }
+  </div>
+</aside>
