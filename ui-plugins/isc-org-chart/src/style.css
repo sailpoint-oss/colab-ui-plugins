@@ -1,0 +1,857 @@
+:root {
+  color-scheme: light dark;
+  /* Horizon's own stack (`font.family.inter`), as ISC computes it on its body
+     copy — Inter first, then the platform faces. We do not ship the Inter
+     webfont, so where it is absent this falls to -apple-system, which is what
+     ISC itself falls back to. */
+  --hz-font: Inter, -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --bg: #f6f7fa;
+  --card: #ffffff;
+  --ink: #171f5f;
+  --accent: #005497;
+  --dim: #6b7280;
+  --line: #e5e7eb;
+  /* Connector lines only: --line is tuned for card borders, which sit on white
+     and read fine when faint. The wires cross open background and need more
+     contrast to stay visible. */
+  --wire: #7a8494;
+  /* Title bar: ISC's page-header navy, overridden at runtime by the tenant's
+     branding navigation colour (main.ts). Same in dark mode: Horizon's dark
+     navigation colour is a light accent blue that white type can't sit on. */
+  --nav: #0033a1;
+  /* Form-field and select-overlay tokens from Armada/Horizon (--hz-form-field-*,
+     --hz-select-*), so the tree picker matches slpt-select-field. */
+  --field-bg: #fcfdfd;
+  --field-border: #cbd5e1;
+  --field-border-hover: #868788;
+  --field-focus: #1d5ade;
+  --field-text: #282e34;
+  --field-icon: #212b36;
+  --overlay-bg: #ffffff;
+  --overlay-border: #f4f6f8;
+  --option-hover: #f7f8f9;
+  /* The near-white ISC paints behind its own loader while the plugin loads
+     (Horizon's slate-50, #f8fafc: read off a screen recording, colour-calibrated
+     against this page's known white and background). */
+  --loading-bg: #f8fafc;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117; --card: #161b22; --ink: #e6edf3; --accent: #5aa9e6; --dim: #9aa4b2; --line: #30363d; --wire: #6b7684;
+    --field-bg: #020617; --field-border: #54626e; --field-border-hover: #637381; --field-focus: #00aaff;
+    --field-text: #dadde1; --field-icon: #f7f8f9; --overlay-bg: #020617; --overlay-border: #54626e; --option-hover: #334155;
+    --loading-bg: #0d1117;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font: 1rem/1.55 var(--hz-font);
+}
+#app { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+/* Slim header: the org tree owns everything below it. */
+.topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--nav);
+  color: #fff;
+}
+.topbar h1 { margin: 0; font-size: 18px; }
+.dim { color: var(--dim); }
+.apierror { margin: 14px 20px; color: #a52f20; font-size: 13px; }
+.error { padding: 24px; }
+code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font: 12px/1.4 "SF Mono", ui-monospace, monospace;
+}
+
+/* Focused org navigator */
+#org-tree { flex: 1; min-height: 0; overflow: auto; background: color-mix(in srgb, var(--accent) 3%, var(--bg)); }
+/* Auto block margins rather than justify-content: center — they split the free
+   space above and below the stage when the tree is short, and collapse to
+   nothing (without clipping the top) once it is taller than the viewport. */
+.wd {
+  /* The up-chevron circle and the drop below it; a root holds the same room. */
+  --up-size: 34px;
+  --drop: 220px;
+  /* A short connector: the stem into the report row, and the lead-in above the
+     up-chevron. */
+  --stub: 22px;
+  /* How much higher a root's card sits than a card that has a manager. */
+  --root-lift: 110px;
+  position: relative; min-height: 100%;
+  display: flex; flex-direction: column;
+  padding: 0 16px 24px;
+}
+
+#org-tree > .dim { padding: 16px 20px; }
+
+/* The loading animation from the SailPoint shared-signals plugin (its loader
+   component): two grey circles, one shrinking as it fades in while the other
+   grows as it fades out, over 1.5s. No caption — "Loading" is only the status
+   region's label, for screen readers.
+   Centred on the whole plugin frame — exactly where ISC's own 60px loader sits
+   while the plugin loads (measured from two screen recordings: frame centre,
+   y=738 in both), so ours takes over without moving. Centred in the tree area
+   it showed 26px lower; with its top at 45% of the frame, 26px higher. The
+   one move left is ISC's own, before the plugin exists: its loader re-centres
+   when ISC's top navigation appears. */
+.wd-loading {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  pointer-events: none;
+  /* Fade in: the frame ISC swaps its loader for ours showed both circles, its
+     mid-shrink and ours starting full-size, so the loader seemed to restart on
+     top of itself. Fading ours in over the swap hides the overlap and the
+     jump in size. Longhands, as the minifier mangles a name-less shorthand. */
+  animation-name: wd-loader-in;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+@keyframes wd-loader-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* While the loader is up, the tree area keeps ISC's loading white instead of
+   switching to the chart's blue-grey — the tree's arrival changes it. */
+#org-tree:has(> .wd-loading) { background: var(--loading-bg); }
+.wd-loader { --loader-size: 60px; position: relative; display: inline-block; width: var(--loader-size); height: var(--loader-size); }
+.wd-loader::before,
+.wd-loader::after {
+  content: ""; position: absolute; left: 0; top: 0;
+  width: var(--loader-size); height: var(--loader-size); border-radius: 50%;
+  background: #888e94;
+  /* Longhands, not the `animation` shorthand: without a name in it, the build's
+     CSS minifier rewrote the shorthand to a 0s, run-once animation. */
+  animation-duration: 1.5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.wd-loader::before { animation-name: wd-shrink-fade-in; }
+.wd-loader::after { animation-name: wd-grow-fade-out; }
+@keyframes wd-shrink-fade-in {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(0); opacity: 1; }
+}
+@keyframes wd-grow-fade-out {
+  0%, 100% { transform: scale(0); opacity: 1; }
+  50% { transform: scale(1); opacity: 0.6; }
+}
+/* No swelling for viewers who asked for less motion: one still circle. */
+@media (prefers-reduced-motion: reduce) {
+  .wd-loader::before { animation-name: none; opacity: 0.6; }
+  .wd-loader::after { display: none; }
+}
+
+/* Tree picker: a copy of Armada's slpt-select-field (Horizon look) — label,
+   help text, then an input-styled trigger opening a listbox 4px below it.
+   Kept clear of the absolutely positioned breadcrumbs on the right. */
+.wd-roots {
+  position: absolute; top: 12px; left: 20px; z-index: 20;
+  display: flex; flex-direction: column;
+  /* Never reach the centre column: the up-chevron lives there, and the old chip
+     row, wider than half the view, sat over it and swallowed its clicks. */
+  width: min(280px, calc(50% - 60px));
+  color: var(--field-text);
+  font: 400 1rem/1.5 var(--hz-font);
+}
+.wd-roots-label { margin-bottom: 8px; }
+.wd-select { position: relative; }
+.wd-select-trigger {
+  width: 100%; min-height: 36px;
+  display: flex; align-items: center;
+  padding: 8px 36px 8px 12px;
+  border: 1px solid var(--field-border); border-radius: 8px;
+  background: var(--field-bg); color: var(--field-text);
+  box-shadow: 0 1px 2px 0 #1212170d;
+  font: inherit; text-align: left; cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.wd-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-select-trigger:hover { border-color: var(--field-border-hover); }
+/* Horizon's focus ring is zero-width: the blue border is the focus indicator.
+   Focus moves into the list while it is open, so hold the border there too. */
+.wd-select-trigger:focus-visible,
+.wd-select-trigger[aria-expanded="true"] { outline: none; border-color: var(--field-focus); }
+.wd-select-trigger .wd-chev {
+  position: absolute; right: 11px; top: 50%;
+  width: 16px; height: 16px; stroke-width: 2;
+  color: var(--field-icon);
+  transform: translateY(-50%);
+  transition: transform 0.2s ease-in-out;
+}
+.wd-select-trigger[aria-expanded="true"] .wd-chev { transform: translateY(-50%) rotate(180deg); }
+.wd-select-panel {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 250px; overflow: hidden auto;
+  margin: 0; padding: 8px; list-style: none;
+  border: 1px solid var(--overlay-border); border-radius: 16px;
+  background: var(--overlay-bg); color: var(--field-text);
+  box-shadow: 0 1px 2px -1px #0000001a, 0 1px 3px 0 #0000001a;
+  outline: none;
+}
+.wd-select-panel[hidden] { display: none; }
+.wd-option {
+  flex: none;
+  display: flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 8px 12px; border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.wd-option.active { background: var(--option-hover); }
+.wd-option-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Armada's option count: a bold figure, no pill. */
+.wd-option-n { margin-left: auto; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) {
+  .wd-select-trigger, .wd-select-trigger .wd-chev, .wd-option { transition: none; }
+}
+
+.wd-crumbs { position: absolute; top: 12px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 40%; }
+.wd-crumb { border: none; background: none; padding: 2px 8px; border-radius: 6px; color: var(--accent); font: 600 12px var(--hz-font); text-decoration: underline; cursor: pointer; white-space: nowrap; }
+.wd-crumb.current { text-decoration: none; color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* No min-width here: sizing the stage to its widest content makes that content
+   the centring reference, so a row wider than the viewport pushes the whole
+   tree off to the right. The row caps and wraps itself instead. */
+/* Top-anchored, not centred: the lead-in has to start at the very top edge, and
+   the long drop below the chevron is what pushes the cards down the page. */
+.wd-scroll { width: 100%; }
+.wd-ghost { pointer-events: none; }
+.wd-stage { display: flex; flex-direction: column; align-items: center; container-type: inline-size; }
+/* An even row centres a gap under the manager, not a card. Once one of its
+   reports has been chosen (org-view tags the row), shift it half a tile (210px
+   card + 16px gap) left so the card right of centre sits under the manager and
+   the chosen card lands straight below its parent — one more card on the left
+   than the right. Only when the stage fits the row plus that half tile either
+   side, i.e. (n + 1) tiles; a narrower stage keeps the row centred rather than
+   clipping its left edge. */
+@container (min-width: 662px) { .wd-reports[data-count="2"] { left: -113px; } }
+@container (min-width: 1114px) { .wd-reports[data-count="4"] { left: -113px; } }
+@container (min-width: 1566px) { .wd-reports[data-count="6"] { left: -113px; } }
+/* A short stub above the circle, never stretched: the slack goes to the stage's
+   auto margins instead, so the lead-in stays the length the reference
+   chart draws it. */
+.wd-lead { flex: none; height: 12px; width: 1px; }
+.wd-up {
+  width: var(--up-size); height: var(--up-size); border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--card); color: var(--accent);
+  padding: 0; cursor: pointer;
+}
+.wd-line { width: 1px; height: var(--stub); background: var(--wire); }
+/* The up-chevron's stand-in while two levels scroll, pinned under the header
+   (pinUpChevron in org-view.ts); above the travelling card, as in the
+   reference chart. */
+.wd-up-pin { position: absolute; z-index: 5; margin: 0; pointer-events: none; }
+/* While a card travels between a report row and the focused slot, a line from
+   the row's bus down to that slot (placed by prepareTrip in org-view.ts). */
+.wd-rail { position: absolute; top: 0; width: 1px; background: var(--wire); pointer-events: none; }
+/* Drawn down from a chosen manager's card before the next level scrolls in, as
+   far as that level's card, so the scroll lands it there. Placed and sized by
+   drawTrail in org-view.ts, as the report row's first child so every card
+   paints over it. */
+.wd-trail {
+  position: absolute;
+  width: 1px;
+  background: var(--wire);
+  transform: scaleY(0); transform-origin: top;
+  pointer-events: none;
+}
+/* The climb connector runs unbroken from the top of the view, through the
+   chevron, down to the focused card: a short lead-in above the circle and a
+   long drop below it, as the reference chart draws it. */
+.wd-line-down { height: var(--drop); }
+/* A root has no chevron or drop; it draws the lead-in invisibly and holds most
+   of the chevron-plus-drop room, so its card sits well clear of the top — just
+   --root-lift higher than on the levels below it. */
+.wd-hold { visibility: hidden; }
+.wd-no-manager { flex: none; height: calc(var(--up-size) + var(--drop) - var(--root-lift)); }
+
+.wd-card {
+  position: relative; box-sizing: border-box;
+  width: 210px; min-height: 240px; padding: 18px 14px 14px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+/* The blue cap: on the focused card, and — as the reference chart does — on
+   every card of
+   someone who manages people. */
+.wd-focus, .wd-manager { border-top: 3px solid var(--accent); }
+.wd-report { font: inherit; color: inherit; padding-bottom: 40px; }
+
+/* The whole card is the link to the identity: an anchor stretched across it,
+   under the chevron and ··· so those stay clickable in their own right. */
+.wd-open { position: absolute; inset: 0; z-index: 1; border-radius: inherit; cursor: pointer; }
+.wd-actions, .wd-down { z-index: 2; }
+
+/* The manager cue: a chevron on the bottom edge of the card, whose hover
+   is a circle, the same size as the up-chevron's. */
+.wd-down {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: var(--up-size); height: var(--up-size); padding: 0;
+  display: grid; place-items: center;
+  border: none; border-radius: 50%; background: none; color: var(--dim);
+  cursor: pointer;
+}
+.wd-chev { display: block; width: 20px; height: 20px; }
+.wd-up .wd-chev { width: 17px; height: 17px; }
+.wd-down:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+
+.wd-card:hover { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); transform: translateY(-3px) scale(1.04); z-index: 2; }
+
+/* ··· Related Actions button: subtle white by default, blue on hover, only
+   surfaced when the card is hovered/focused. */
+.wd-actions {
+  position: absolute; top: 10px; right: 10px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--card); color: var(--dim);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  opacity: 0; transform: scale(0.9); transition: opacity 0.12s, transform 0.12s, background 0.12s, color 0.12s;
+}
+.wd-card:hover .wd-actions,
+.wd-card:focus-within .wd-actions { opacity: 1; transform: scale(1); }
+.wd-actions:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.wd-avatar {
+  position: relative;
+  width: 56px; height: 56px; margin-bottom: 2px; border-radius: 50%;
+  display: grid; place-items: center; overflow: visible;
+  background: var(--accent); color: #fff; font: 700 18px var(--hz-font);
+}
+/* A canvas the photo is painted onto (paintPhotos), over the initials, which
+   show until it decodes. */
+.wd-photo { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
+.wd-badge {
+  position: absolute; right: -4px; bottom: -2px; z-index: 1;
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--accent); color: #fff; border: 2px solid var(--card);
+  font: 700 11px var(--hz-font);
+}
+.wd-name { color: var(--accent); font-weight: 700; font-size: 14px; line-height: 1.3; }
+a.wd-name { text-decoration: none; }
+a.wd-name:hover, a.wd-name:focus-visible { text-decoration: underline; }
+.wd-title { font-size: 12px; line-height: 1.45; }
+.wd-loc, .wd-org { color: var(--dim); font-size: 12px; line-height: 1.45; }
+
+/* Reports hang off a horizontal bus: a line spanning the row with both ends
+   turning down, met in the middle by the stem from the manager's card. Sizing
+   the row to its content (rather than the full stage) keeps the bus flush with
+   the outer cards instead of running past them. */
+.wd-reports {
+  position: relative;
+  /* Cap the row at seven tiles wide so a large team stacks into rows instead of
+     running off the side; narrower viewports wrap sooner. */
+  width: max-content; max-width: min(100%, calc(7 * 210px + 6 * 16px));
+  margin: 0 auto;
+  /* flex-start, not center: the row box is only as wide as its content until it
+     hits the cap, so a short row is still centred by the auto margins, while a
+     wrapped row fills from the left and its last line stays left-aligned with
+     the one above rather than floating to the middle. */
+  display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 16px;
+  padding-top: 26px;
+}
+.wd-reports::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 12px;
+  border: 1px solid var(--wire); border-bottom: none;
+}
+.wd-empty { margin: 10px 0 0; }
+
+/* The Show More / Show Less tile closing an over-long row. */
+.wd-more { justify-content: center; }
+.wd-more-btn {
+  padding: 8px 18px; border-radius: 999px;
+  border: 1px solid var(--accent); background: none; color: var(--accent);
+  font: 600 13px var(--hz-font); cursor: pointer;
+}
+.wd-more-btn:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* Location line: outline pin sitting tight against the place name. */
+.wd-loc { display: inline-flex; align-items: center; gap: 3px; }
+.wd-pin { width: 12px; height: 12px; flex: none; }
+
+/* Related Actions popover (anchored to the ··· button) */
+.wd-menu-pop {
+  position: fixed; z-index: 50;
+  min-width: 200px;
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  padding: 6px;
+}
+.wd-menu { list-style: none; margin: 0; padding: 0; }
+.wd-menu-item {
+  width: 100%; text-align: left; padding: 8px 10px;
+  border: none; border-radius: 7px; background: none; color: var(--ink);
+  font: 500 13px var(--hz-font); cursor: pointer;
+}
+.wd-menu-item:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.wd-menu-item.destructive { color: #a52f20; }
+.wd-menu-item.destructive:hover { background: rgba(165, 47, 32, 0.1); }
+
+/* Related Actions dialogs (actions.ts): a modal card on a dimmed backdrop, in
+   the overlay tokens the tree picker uses. */
+.wd-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+.wd-dialog {
+  /* `$modalWidthLg`, which `slpt-modal` takes as its max-width from the `lg`
+     breakpoint up — the default for a confirmation, which sets no width class. */
+  width: min(600px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+  /* `width: 'sm'` — `$modalWidthSm`, which the unsaved-changes modal asks for. */
+  border: 1px solid var(--hz-dialog-border-color, #ffffff);
+  /* `--hz-dialog-border-radius` resolves through `overlay.modal.border.radius`
+     to `border.radius.xl` — 16px. The 6px in `modal.component.scss` is only the
+     no-Horizon fallback, and an iframed plugin always takes the fallback, so it
+     has to carry the resolved value rather than the legacy one. */
+  border-radius: var(--hz-dialog-border-radius, 16px);
+  background: var(--overlay-bg); color: var(--field-text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  font: 400 1rem/1.5 var(--hz-font);
+}
+.wd-dialog-sm { width: min(500px, 100%); }
+
+/* `.slpt-modal-header` is a `slpt-notification-header` — the same component as
+   the banners above, which is where its 16px padding and its mark come from.
+   A destructive action is its `error` type: red-100 behind a red-950 mark, and
+   the confirm button stays primary blue rather than turning red. */
+.wd-dialog-head {
+  display: flex; align-items: center;
+  padding: 16px; border-radius: 16px 16px 0 0;
+}
+.wd-dialog-danger .wd-dialog-head { background: var(--hz-toast-error-background, #f8c8d3); }
+.wd-dialog-danger .wd-note-mark { color: #450a0a; }
+/* The `info` type: cyan-200 behind a blue-950 mark, measured off ISC's own
+   Reset Password dialog. Its toast fallback is Armada's grey `$slpt-g2`, which
+   the Horizon theme replaces with this. */
+.wd-dialog-info .wd-dialog-head { background: var(--hz-toast-info-background, #91dff3); }
+.wd-dialog-info .wd-note-mark { color: #071738; }
+/* `:host-context(.slpt-modal-header) .notification-header__title`, whose message
+   truncates rather than wraps. */
+.wd-dialog-head h2 {
+  flex: 1; margin: 0 8px 0 0; font-size: 1.125rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* `.slpt-overlay__dismiss`: a 20px `fa-close` in `--color-g4`, whose ink is
+   15px square. It carries no hover state at all — the platform's shows nothing
+   on hover, so neither does this. */
+.wd-dialog-close {
+  flex: none; display: grid; place-items: center;
+  width: 24px; height: 24px; padding: 0;
+  border: none; background: none;
+  color: var(--color-g4, #212b36); cursor: pointer;
+}
+.wd-dialog-close svg { width: 15px; height: 15px; pointer-events: none; }
+.wd-dialog-body { padding: 16px 16px 24px; }
+.wd-dialog-body p { margin: 0 0 12px; }
+.wd-dialog-body > p:last-child { margin-bottom: 0; }
+.wd-choices { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; border: none; }
+.wd-choice { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+/* Armada's own radio (saas-ui-monorepo `theme/styles/form/_radio.scss`): a 20px
+   control that draws its checked state as a 5px border over a contrasting
+   background, not as an accent-coloured dot. Token names are theirs; the
+   fallbacks are what ISC's Horizon theme resolves them to, since an iframed
+   plugin cannot see the host's custom properties. */
+.wd-choice input[type="radio"] {
+  appearance: none; -webkit-appearance: none; box-sizing: border-box;
+  width: 20px; height: 20px; min-width: 20px;
+  margin: 0 8px 0 0; /* $slpt-radio-input-margin-right */
+  border: 1px solid var(--hz-radiobutton-border-color, #cbd5e1);
+  border-radius: 20px; cursor: pointer;
+}
+.wd-choice input[type="radio"]:checked {
+  border: 5px solid var(--hz-radiobutton-checked-background, #26c8a1);
+  background-color: var(--hz-radiobutton-icon-checked-color, #0a3228);
+}
+/* `.slpt-checkbox-container-style`, with the tokens resolved rather than the
+   component's own fallbacks — a plugin never receives `--hz-*`, so the fallback
+   is what renders and it has to carry the resolved value. Measured against
+   ISC's: border #cbd5e1 (not the declared #637381), #868788 on hover, and
+   `checkbox.border.radius` → `border.radius.sm` → 6px (not the declared 3px).
+   The tick is drawn with a rotated border, not an SVG background: the plugin CSP
+   allows `img-src 'self'` only, which rules a data URI out even in CSS. */
+/* The real control, kept focusable and clickable but invisible: the box beside
+   it is what is drawn, because an `<input>` cannot hold the glyph. */
+.wd-level .wd-check-input { position: absolute; width: 20px; height: 20px; margin: 0; opacity: 0; cursor: pointer; }
+.wd-level .wd-check {
+  flex: none; display: grid; place-items: center;
+  box-sizing: border-box;
+  width: var(--hz-checkbox-width, 20px); height: var(--hz-checkbox-height, 20px);
+  margin: 2px 8px 0 0;
+  border: 1px solid var(--hz-checkbox-border-color, #cbd5e1);
+  border-radius: var(--hz-checkbox-border-radius, 6px);
+  background: var(--hz-checkbox-background, #ffffff);
+  color: #282e34;
+}
+.wd-level .wd-check svg { width: 12px; height: 12px; }
+/* Unchecked, the glyph is simply not drawn. */
+.wd-level .wd-check-input:not(:checked) + .wd-check svg { visibility: hidden; }
+.wd-level .wd-check-input:hover + .wd-check { border-color: var(--hz-checkbox-hover-border-color, #868788); }
+.wd-level .wd-check-input:focus-visible + .wd-check { outline: 2px solid var(--field-focus); outline-offset: 1px; }
+.wd-level .wd-check-input:checked + .wd-check {
+  border-color: #26c8a1;
+  background: var(--hz-checkbox-checked-background, #26c8a1);
+  /* The glyph takes `color: inherit`; on the teal box that is teal-950. */
+  color: var(--hz-checkbox-icon-checked-color, #0a3228);
+}
+
+.wd-choice input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; position: relative;
+  box-sizing: border-box; flex: none;
+  width: var(--hz-checkbox-width, 20px); height: var(--hz-checkbox-height, 20px);
+  min-width: var(--hz-checkbox-width, 20px); margin: 0 8px 0 0;
+  border: 1px solid var(--hz-checkbox-border-color, #cbd5e1);
+  border-radius: var(--hz-checkbox-border-radius, 6px);
+  background: var(--hz-checkbox-background, #ffffff);
+  color: #282e34;
+  cursor: pointer;
+}
+.wd-choice input[type="checkbox"]:hover { border-color: var(--hz-checkbox-hover-border-color, #868788); }
+.wd-choice input[type="checkbox"]:checked { border-color: #26c8a1; background: #26c8a1; }
+.wd-choice:hover { background: var(--option-hover); }
+/* `slpt-attribute`: a small grey key sitting tight above its value, as the
+   reset dialog names the source. Scoped past `.wd-dialog-body p`, which would
+   otherwise win on specificity and space the key off its own value. Margins
+   measured against ISC's dialog: 10px key to value, 30px before what follows. */
+.wd-dialog-body .wd-attr-key {
+  /* `slpt-attribute`'s key, computed: $slpt-g3 at 12px/14px, weight 400, and no
+     letter-spacing of its own. */
+  margin: 6px 0 0; color: #637381;
+  font: 400 12px/14px var(--hz-font); text-transform: uppercase;
+}
+.wd-dialog-body .wd-attr-value { margin: 0 0 18px; }
+.wd-code {
+  padding: 12px; border-radius: 8px; text-align: center;
+  background: var(--option-hover);
+  font: 600 28px/1.2 "SF Mono", ui-monospace, monospace; letter-spacing: 0.2em;
+  user-select: all;
+}
+/* `.slpt-modal-footer`, whose buttons sit 12px apart. */
+.wd-dialog-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 0 16px 16px; }
+/* `identities-reset-password-modal` projects its own footer into the modal body
+   rather than filling the footer slot, so the room under its buttons is the
+   body's 24px, not the footer's 16px — and its address line is indented 8px. */
+.wd-dialog-reset-password .wd-dialog-actions { padding-bottom: 24px; }
+/* The address line carries no margin of its own: the room beneath it is the
+   body's 24px, which is what `__body`'s own `margin-bottom: 24px` gives ISC. */
+.wd-dialog-reset-password .wd-send-to p,
+.wd-dialog-reset-password .wd-send-to .wd-choices { margin: 0; }
+/* Armada's Horizon button bridge, from saas-ui-monorepo
+   (`theme/styles/buttons/_horizon-button-bridge.scss`). Its hex fallbacks are
+   the resolved light-mode values of the Horizon tokens, written as a safety net
+   for surfaces that paint before the runtime `--hz-*` variables bind — an
+   iframed plugin never gets them at all, so the fallback is always what renders.
+   Keeping the token names means a host that ever does expose them still wins.
+   Note: light mode only, as the bridge itself warns. */
+.wd-btn {
+  --slpt-btn-border-radius: var(--hz-button-border-radius, 8px);
+  --slpt-btn-padding-x: var(--hz-button-padding-x, 16px);
+  --slpt-btn-padding-y: var(--hz-button-padding-y, 8px);
+  --slpt-btn-font-weight: var(--hz-button-label-font-weight, 600);
+  --slpt-btn-disabled-opacity: var(--hz-disabled-opacity, 0.6);
+  --slpt-btn-secondary-bg: var(--hz-button-contrast-background, #ffffff);
+  --slpt-btn-secondary-color: var(--hz-button-outlined-contrast-color, #282e34);
+  --slpt-btn-secondary-border: var(--hz-button-contrast-border-color, #dadde1);
+  --slpt-btn-secondary-hover-bg: var(--hz-button-contrast-hover-background, #f4f6f8);
+  --slpt-btn-secondary-hover-border: var(--hz-button-contrast-hover-border-color, #595b5c);
+  /* Branding first: ISC drives this from the tenant's `actionButtonColor`, which
+     main.ts reads from `/brandings/v1` into `--action`. Failing that, the
+     platform default — and ISC's is not one colour. A modal's confirm renders
+     blue-500 (measured on Reset Password and Reset Identity, and on the 0.6
+     blend of a disabled Save), while a drawer's confirm computes sky-500
+     (`#0074d9`, read twice off Set User Levels). Each surface carries its own
+     below; `--primary` is the one either overrides. */
+  --primary: var(--hz-button-primary-background, #1d5ade);
+  --slpt-btn-primary-bg: var(--action, var(--primary));
+  --slpt-btn-primary-border: var(--action, var(--primary));
+  --slpt-btn-primary-color: var(--hz-button-primary-color, #ffffff);
+  /* Hover is the base darkened, not a separate hue: ISC's own hovered primary
+     measured as exactly 0.79 of its resting colour. */
+  --slpt-btn-primary-hover-bg: var(--hz-button-primary-hover-background, var(--primary-hover));
+  --slpt-btn-primary-hover-border: var(--hz-button-primary-hover-border-color, var(--primary-hover));
+  --primary-hover: #1747b0; /* 0.79 x blue-500 */
+
+  box-sizing: border-box; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 120px; height: 36px;
+  padding: var(--slpt-btn-padding-y) var(--slpt-btn-padding-x);
+  border: 1px solid var(--slpt-btn-secondary-border);
+  border-radius: var(--slpt-btn-border-radius);
+  background: var(--slpt-btn-secondary-bg); color: var(--slpt-btn-secondary-color);
+  font-family: inherit; font-size: 1rem; font-weight: var(--slpt-btn-font-weight);
+  line-height: normal; white-space: nowrap; cursor: pointer;
+}
+.wd-btn:hover { background: var(--slpt-btn-secondary-hover-bg); border-color: var(--slpt-btn-secondary-hover-border); }
+.wd-btn:focus-visible { outline: 2px solid var(--field-focus); outline-offset: 2px; }
+.wd-btn-primary {
+  border-color: var(--slpt-btn-primary-border);
+  background: var(--slpt-btn-primary-bg); color: var(--slpt-btn-primary-color);
+}
+.wd-btn-primary:hover { background: var(--slpt-btn-primary-hover-bg); border-color: var(--slpt-btn-primary-hover-border); }
+/* Nothing changed yet, so there is nothing to save. The platform fades the
+   button rather than recolouring it — which is what the muted blue in ISC's own
+   screenshot is: the primary at 0.6. */
+.wd-btn:disabled { opacity: var(--slpt-btn-disabled-opacity); cursor: not-allowed; }
+.wd-btn:disabled:hover { background: var(--slpt-btn-primary-bg); border-color: var(--slpt-btn-primary-border); }
+
+/* `identity-set-permissions-overlay`: a search, a bar counting results and
+   selections, the levels as cards, and a pager. Its list is `gap: 16px` and the
+   whole overlay sits on the same 25px 47px as the lifecycle one. */
+.wd-levels { display: flex; flex-direction: column; gap: 16px; height: 100%; }
+/* `.set-permissions-overlay-permission-list-query`: the search grows, the sort
+   trigger sits beside it. */
+.wd-levels-query-row { display: flex; flex-direction: row; gap: 16px; }
+.wd-levels-search { position: relative; display: flex; flex: 1; }
+/* `slpt-sort-dropdown`: an icon button and the popover it opens. */
+.wd-sort { position: relative; flex: none; }
+.wd-sort-trigger {
+  display: grid; place-items: center; width: 48px; height: 48px; padding: 0;
+  border: 1px solid var(--field-border); border-radius: 8px;
+  background: var(--field-bg); color: var(--field-text); cursor: pointer;
+}
+.wd-sort-trigger svg { width: 20px; height: 20px; pointer-events: none; }
+.wd-sort-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 2;
+  width: 260px; padding: 16px;
+  border: 1px solid var(--overlay-border); border-radius: 8px;
+  background: var(--overlay-bg); box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+}
+.wd-sort-menu[hidden] { display: none; }
+.wd-sort-order { display: flex; flex-direction: column; margin-bottom: 16px; }
+.wd-form-label { display: block; margin-bottom: 8px; font-weight: 700; }
+.wd-toggle-group { display: flex; }
+.wd-toggle {
+  flex: 1; height: 32px; padding: 0 12px;
+  border: 1px solid var(--field-border); background: var(--field-bg);
+  color: var(--field-text); font: 400 14px var(--hz-font); cursor: pointer;
+}
+.wd-toggle:first-child { border-radius: 8px 0 0 8px; }
+.wd-toggle:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+.wd-toggle.on { background: var(--slpt-btn-primary-bg, #1d5ade); border-color: var(--slpt-btn-primary-bg, #1d5ade); color: #fff; }
+/* `.slpt-sort-dropdown__sort-button`: 120x36, on its own row. */
+.wd-sort-apply { display: flex; margin-top: 16px; }
+.wd-sort-apply .wd-btn { width: 120px; min-width: 120px; }
+.wd-search-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--field-icon); pointer-events: none;
+}
+.wd-levels-query {
+  flex: 1; height: 48px; padding: 0 14px 0 40px;
+  border: 1px solid var(--field-border); border-radius: 8px;
+  background: var(--field-bg); color: var(--field-text);
+  font: 400 1rem var(--hz-font);
+}
+.wd-levels-query:focus { outline: 2px solid var(--field-focus); outline-offset: -1px; }
+/* `.set-permissions-overlay-results-bar` */
+.wd-levels-bar {
+  display: flex; align-items: center; gap: 24px;
+  height: 60px; padding: 0 16px;
+  border: 1px solid var(--hz-content-border-color, #dfe3e7); border-radius: 8px;
+  background: var(--hz-card-background, #ffffff);
+  box-shadow: var(--hz-card-shadow, 0 2px 4px rgb(0 0 0 / 0.04));
+  font: 400 1rem var(--hz-font);
+}
+.wd-levels-bar .wd-levels-count,
+.wd-levels-bar .wd-levels-selected { font-weight: 700; }
+.wd-link {
+  border: none; background: none; padding: 0; cursor: pointer;
+  color: var(--field-focus); font: 400 1rem var(--hz-font);
+}
+.wd-levels-list { position: relative; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow: auto; }
+/* `.loading-mask`: half-opaque over the content it is covering, the loader and
+   its word centred on it. */
+.wd-loading-mask {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: color-mix(in srgb, var(--hz-content-background, #ffffff) 50%, transparent);
+  color: #637381; font-size: 1.5rem;
+}
+.wd-loading-mask p { margin: 0; }
+.wd-loading-mask .wd-loader { --loader-size: 44px; }
+/* `.slpt-horizontal-card`, which is what each level is drawn on: the checkbox,
+   its name, and what it grants. Selected changes the control, not the card. The
+   card's own floor is 85px; a level card stands taller than that. */
+.wd-level {
+  display: flex; align-items: flex-start; gap: 12px;
+  box-sizing: border-box;
+  min-width: 366px; max-width: 100%; min-height: 118px;
+  /* `min-height` is a floor, not a size: a flex child would otherwise be
+     squeezed under it and clip a description that runs to three lines. */
+  flex: none;
+  padding: 16px; cursor: pointer;
+  border: 1px solid var(--hz-content-border-color, #dfe3e7);
+  border-radius: 8px;
+  background: var(--hz-card-background, #ffffff);
+  color: var(--hz-card-color, inherit);
+  box-shadow: var(--hz-card-shadow, 0 2px 4px rgb(0 0 0 / 0.04));
+}
+
+/* The card's own type is 18px, larger than the drawer's 16px body copy. The
+   two lines are not spaced by a gap: `.list-card--padding` stacks
+   `.list-card-header` on its own 20px line and `.list-card-subheader-container`
+   straight under it, and what reads as space between them is the 24px line the
+   description sets for itself. */
+.wd-level-text { display: flex; flex-direction: column; font-size: 18px; }
+.wd-level-name { font-weight: 700; line-height: 20px; }
+/* `.list-card-subheader-container` sets its own 24px line, not the 1.5 the
+   drawer's body copy inherits — two lines measure 48px there against our 54 —
+   and closes with a 16px margin. That margin is the card's real floor: 16 + 20
+   + 48 + 16 padding is 116, which with the border is the 118px above. */
+.wd-level-desc { color: var(--field-text); line-height: 24px; margin-bottom: 16px; }
+/* `slpt-empty-state`: centred column, the message 32px under the art. The
+   consumer here sets its padding to 16px rather than the component's own. */
+.wd-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; color: var(--hz-text-color, #212b36);
+}
+.wd-empty-art { width: 218px; max-width: 100%; height: auto; }
+.wd-empty-msg { padding-top: 32px; text-align: center; text-wrap: balance; }
+/* 32px, per its computed style. The dialog's own title rules are scoped to
+   `.wd-dialog-head`, so they no longer reach a heading inside the body — they
+   used to tie this on specificity and win on source order. */
+.wd-empty-msg h2 { margin: 0 0 8px; font-size: 2rem; font-weight: 700; }
+.wd-levels-pager[hidden] { display: none; }
+.wd-levels-pager {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  height: 60px; padding: 0 16px;
+  border: 1px solid var(--hz-content-border-color, #dfe3e7); border-radius: 8px;
+  background: var(--hz-card-background, #ffffff);
+}
+.wd-page-btn {
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid var(--field-border); border-radius: 8px;
+  background: var(--field-bg); color: var(--field-text); cursor: pointer;
+}
+.wd-page-btn svg { width: 12px; height: 12px; pointer-events: none; }
+.wd-page-btn:disabled { opacity: 0.6; cursor: default; }
+/* The drawer's own body scrolls its list rather than the page. */
+.wd-drawer .wd-dialog-user-levels-body { overflow: hidden; }
+
+/* A drawer's confirm is sky-500 where a modal's is blue-500 — ISC's own
+   difference, measured on each. Branding still overrides both. */
+.wd-drawer .wd-btn-primary { --primary: #0074d9; --primary-hover: #005cab; }
+
+/* A right-hand drawer, flush to the edge and full height, which is how ISC
+   opens a form — the list it was launched from stays visible beside it. */
+.wd-drawer { padding: 0; place-items: stretch end; }
+.wd-drawer .wd-dialog {
+  display: flex; flex-direction: column;
+  /* ISC sizes its overlay from the viewport rather than to a fixed width:
+     three columns plus four gutters. Capped at the frame, since a plugin's
+     `vw` is its iframe's width and not the whole window's. */
+  width: min(calc(10.8vw * 3 + 32px * 4), 100%);
+  height: 100%; max-height: none;
+  border: none; border-radius: 0;
+}
+/* `identity-lifecycle-states-overlay` wraps Armada's overlay in 25px 47px, and
+   `slpt-overlay-header` sits on `margin: 0 32px 16px 0`. */
+.wd-drawer .wd-dialog-head { padding: 25px 47px 0; border-bottom: none; }
+/* `slpt-overlay-header-title`, whose class is `slpt-h3`:
+   `font-size: var(--hz-font-size-20, $h3-font-size)`. That 1.75rem fallback is
+   Armada's *legacy* scale — the monorepo only re-declares the token to it under
+   `legacy-armada-styles`, for when the Horizon layer is off. ISC runs Horizon,
+   whose ramp is smaller and where the token is its name, 20px. An iframed
+   plugin never sees the host's tokens, so the fallback is what renders: 1.25rem
+   is the one that matches. Truncating rather than wrapping is the component's
+   own, and why a long name cannot push the panel out of shape; ISC pairs it
+   with a tooltip carrying the full text. */
+.wd-drawer .wd-dialog-head h2 {
+  margin-right: 32px; padding-bottom: 8px;
+  color: var(--hz-drawer-color, #212b36);
+  font-size: var(--hz-font-size-20, 1.25rem); line-height: normal;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wd-drawer .wd-choice { font-size: 1rem; }
+/* `slpt-overlay-body` adds 24px above the rows; the choices sit further in than
+   the title, the one indent I could not find a rule for — measured off ISC. */
+.wd-drawer .wd-dialog-body { flex: 1; padding: 24px 47px 24px 81px; overflow: auto; }
+.wd-drawer .wd-choices { gap: 0; }
+/* `.slpt-form-radio-container`, whose 8px above and below each row is what makes
+   the 40px rhythm against a 24px line. */
+.wd-drawer .wd-choice { gap: 0; padding: 8px 8px 8px 0; line-height: 1.5; }
+.wd-drawer .wd-choice:hover { background: none; }
+.wd-drawer .wd-dialog-actions { gap: 13px; padding: 24px 47px 25px; }
+
+/* Action outcomes, bottom-centre. */
+/* `#slpt-alerts-toaster`: bottom-left, 1rem in from both edges. */
+.wd-notes {
+  position: fixed; left: 1rem; bottom: 1rem; z-index: 70;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  max-height: 50vh; overflow-y: auto;
+  width: max-content; max-width: calc(100vw - 2rem);
+}
+/* `slpt-notification-header` (saas-ui-monorepo), which ISC uses for both a toast
+   and a modal's header — the same component, which is why its warning dialogs
+   and its error banners share a look. Backgrounds come from its `--hz-toast-*`
+   tokens; the fallbacks here are what ISC resolves them to, from Horizon's
+   palette, rather than the legacy Armada tints the component falls back to
+   (`$slpt-s2-light` #b3dbc5 and `$slpt-s4-light` #ffbdcd). */
+.wd-note {
+  display: flex; align-items: center;
+  /* 75px is the floor a notification-header takes inside an `slpt-alert`; the
+     modal header, which is the same component, has no such floor. The 16px is
+     `.notification-header__content`, which centres itself in that height. */
+  box-sizing: border-box; width: 485px; max-width: 100%; min-height: 75px; padding: 16px;
+  border: 1px solid var(--notification-header-border-color, #ffffff);
+  border-radius: var(--hz-toast-border-radius, 8px);
+  /* The component's own colour is `inherit`, which in ISC picks up
+     `:root { color: var(--hz-text-color, $slpt-g4) }`. Inheriting here would
+     pick up this plugin's navy instead, so name it. */
+  background: var(--hz-toast-secondary-background, #ffffff);
+  color: var(--hz-text-color, #212b36);
+  box-shadow: 0 4px 16px rgb(65 83 100 / 0.3);
+}
+/* `NotificationTypeToPropsMap`: success is teal, error red, and work in flight
+   is the `loading` type — white, carrying the platform loader rather than a
+   mark, which is what "Sending invitations." is. */
+.wd-note-success { background: var(--hz-toast-success-background, #cbf2e8); }
+.wd-note-error { background: var(--hz-toast-error-background, #f8c8d3); }
+/* The glyph is the whole mark — `--color-g4` on the icon, which the header
+   resolves to its own dark tone. No disc behind it: the disc is the icon. */
+.wd-note-mark {
+  flex: none; display: grid; place-items: center;
+  width: 24px; height: 24px; margin-right: 10px;
+}
+.wd-note-mark svg { width: 24px; height: 24px; }
+/* teal-950 and red-950 — the same two the dialog header uses. */
+.wd-note-success .wd-note-mark { color: #0a3228; }
+.wd-note-error .wd-note-mark { color: #450a0a; }
+/* The loader at notification scale — the same two pulsing discs ISC paints
+   full-size while a page loads, and the `loading` type's icon. */
+.wd-note .wd-loader { --loader-size: 20px; flex: none; margin-right: 10px; }
+/* `.notification-header__title` is bold with 8px to its right; the plain
+   message beside it is not. */
+.wd-note-text { flex: 1; margin: 0 8px 0 0; color: inherit; font: 400 1rem/1.4 var(--hz-font); }
+.wd-note-progress .wd-note-text { font-weight: 700; }
+/* `.notification-header__close-icon` is the same `fa-close` as the overlay's,
+   on `--color-g4: currentColor`, and carries no hover of its own. */
+.wd-note-close {
+  flex: none; display: grid; place-items: center;
+  width: 24px; height: 24px; padding: 0;
+  border: none; background: none; color: inherit; cursor: pointer;
+}
+.wd-note-close svg { width: 15px; height: 15px; pointer-events: none; }
+.wd-note-close svg { width: 16px; height: 16px; }
+
+.status { padding: 16px 20px; color: var(--dim); }
+.error pre { padding: 12px; overflow-x: auto; background: rgba(255, 0, 0, 0.06); border-radius: 8px; font-size: 12px; }

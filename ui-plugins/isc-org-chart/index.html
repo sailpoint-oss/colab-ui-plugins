@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Org Chart</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- The page shell, title bar and all, from the first frame: the loader
+         starts with the title bar rather than filling the page first and then
+         jumping below it. main.ts keeps this rather than redrawing it. -->
+    <main id="app">
+      <header class="topbar"><h1>My Org Chart</h1></header>
+      <div id="org-tree">
+        <div class="wd-loading" role="status" aria-label="Loading">
+          <span class="wd-loader" aria-hidden="true"></span>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

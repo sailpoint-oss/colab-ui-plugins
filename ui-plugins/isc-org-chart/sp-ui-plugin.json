@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "manifest": {
+        "alias": "isc-org-chart",
+        "name": {
+            "en": "ISC Org Chart",
+            "es": "Organigrama ISC",
+            "fr": "Organigramme ISC",
+            "it": "Organigramma ISC",
+            "de": "ISC-Organigramm"
+        },
+        "description": {
+            "en": "Org chart for Identity Security Cloud: browse the reporting hierarchy and run Related Actions on an identity.",
+            "es": "Organigrama para Identity Security Cloud: explore la estructura jerárquica y ejecute Acciones relacionadas sobre una identidad.",
+            "fr": "Organigramme pour Identity Security Cloud : parcourez la structure hiérarchique et exécutez des Actions associées sur une identité.",
+            "it": "Organigramma per Identity Security Cloud: esplori la struttura gerarchica ed esegua Azioni correlate su un'identità.",
+            "de": "Organigramm für Identity Security Cloud: Durchsuchen Sie die hierarchische Struktur und führen Sie zugehörige Aktionen für eine Identität aus."
+        },
+        "apiScopes": [
+            "sp:scopes:all"
+        ],
+        "contentSecurityPolicies": {},
+        "permissionPolicy": {},
+        "iframeAllow": {},
+        "state": null,
+        "slots": [
+            {
+                "slotId": "full-page"
+            }
+        ]
+    },
+    "build": {
+        "outDir": "./dist",
+        "port": 5173
+    }
+}
