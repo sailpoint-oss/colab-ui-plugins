@@ -20,49 +20,65 @@ describe('CAPABILITY_CATALOG', () => {
 
   it('uses iframeAllow src for camera and never mentions webgl', () => {
     const camera = CAPABILITY_CATALOG.find((item) => item.id === 'camera');
-    expect(camera?.declaration.kind).toBe('manifest');
-    if (camera?.declaration.kind === 'manifest') {
-      expect(camera.declaration.iframeAllow?.['camera']).toEqual(["'src'"]);
-      expect(camera.declaration.permissionPolicy?.['camera']).toEqual(["'self'"]);
-    }
+    expect(camera?.declaration.iframeAllow?.['camera']).toEqual(["'src'"]);
+    expect(camera?.declaration.permissionPolicy?.['camera']).toEqual(["'self'"]);
     const serialized = JSON.stringify(CAPABILITY_CATALOG);
     expect(serialized).not.toContain('webgl');
     expect(declarationCode(camera!)).toContain("'src'");
   });
 
-  it('names the host tokens in the Default badge tooltip', () => {
-    const topNav = CAPABILITY_CATALOG.find((item) => item.id === 'allow-top-navigation');
-    expect(topNav?.declaration.kind).toBe('host-sandbox');
-    expect(capabilityBadge(topNav!).label).toBe('Default');
-    expect(capabilityBadge(topNav!).tooltip).toContain('allow-top-navigation');
-  });
-
-  it('gives host baseline capabilities no declaration block', () => {
-    for (const id of ['allow-downloads', 'allow-modals']) {
+  it('declares iframeSandbox tokens for the sandbox capabilities', () => {
+    const expected: Record<string, string[]> = {
+      'allow-top-navigation': ['allow-top-navigation'],
+      'open-link-new-tab': ['allow-popups', 'allow-popups-to-escape-sandbox'],
+      'allow-downloads': ['allow-downloads'],
+      'allow-modals': ['allow-modals'],
+    };
+    for (const [id, tokens] of Object.entries(expected)) {
       const def = CAPABILITY_CATALOG.find((item) => item.id === id);
-      expect(def?.declaration.kind).toBe('host-sandbox');
-      expect(declarationCode(def!)).toBeNull();
+      expect(def?.declaration.iframeSandbox).toEqual(tokens);
+      expect(def?.declaration.iframeAllow).toBeUndefined();
+      expect(def?.declaration.permissionPolicy).toBeUndefined();
     }
   });
 
-  it('marks manifest capabilities as opt-in', () => {
-    const camera = CAPABILITY_CATALOG.find((item) => item.id === 'camera');
-    expect(capabilityBadge(camera!).label).toBe('Opt-in');
-    expect(capabilityBadge(camera!).tooltip).toContain('sp-ui-plugin.json');
+  it('only declares tokens UMS accepts and never the renderer baseline', () => {
+    const allowed = new Set([
+      'allow-top-navigation',
+      'allow-popups',
+      'allow-popups-to-escape-sandbox',
+      'allow-downloads',
+      'allow-modals',
+    ]);
+    for (const def of CAPABILITY_CATALOG) {
+      for (const token of def.declaration.iframeSandbox ?? []) {
+        expect(allowed.has(token)).toBe(true);
+      }
+    }
   });
 
-  it('keeps the copyable fragment as JSON', () => {
+  it('shows the iframeSandbox fragment for a sandbox capability', () => {
+    const modals = CAPABILITY_CATALOG.find((item) => item.id === 'allow-modals');
+    expect(declarationCode(modals!)).toContain('"iframeSandbox"');
+    expect(declarationCode(modals!)).toContain('"allow-modals"');
+  });
+
+  it('marks every capability as opt-in', () => {
+    const badge = capabilityBadge();
+    expect(badge.label).toBe('Opt-in');
+    expect(badge.tooltip).toContain('sp-ui-plugin.json');
+  });
+
+  it('keeps the copyable fragment as JSON for every capability', () => {
     for (const def of CAPABILITY_CATALOG) {
       const code = declarationCode(def);
 
-      if (def.declaration.kind === 'manifest') {
+      expect(code).toMatch(/^\/\/ sp-ui-plugin\.json\n/);
+      const json = code.replace(/^\/\/[^\n]*\n/, '');
+      expect(() => JSON.parse(json)).not.toThrow();
+      if (def.declaration.iframeAllow) {
         expect(code).toContain("'src'");
         expect(code).toContain("'self'");
-        expect(code).toMatch(/^\/\/ sp-ui-plugin\.json\n/);
-        const json = code!.replace(/^\/\/[^\n]*\n/, '');
-        expect(() => JSON.parse(json)).not.toThrow();
-      } else {
-        expect(code).toBeNull();
       }
     }
   });
@@ -76,37 +92,28 @@ describe('CAPABILITY_CATALOG', () => {
     );
     const newTab = CAPABILITY_CATALOG.find((item) => item.id === 'open-link-new-tab');
     expect(newTab?.title).toBe('Open a link in a new tab');
-    expect(newTab?.declaration.kind).toBe('host-sandbox');
-    if (newTab?.declaration.kind === 'host-sandbox') {
-      expect(newTab.declaration.sandboxTokens).toEqual([
-        'allow-popups',
-        'allow-popups-to-escape-sandbox',
-      ]);
-    }
+    expect(newTab?.declaration.iframeSandbox).toEqual([
+      'allow-popups',
+      'allow-popups-to-escape-sandbox',
+    ]);
   });
 
   it('declares both clipboard keys on one card', () => {
     const clipboard = CAPABILITY_CATALOG.find((item) => item.id === 'clipboard');
     expect(clipboard?.title).toBe('Use the clipboard');
-    expect(clipboard?.declaration.kind).toBe('manifest');
-    if (clipboard?.declaration.kind === 'manifest') {
-      expect(Object.keys(clipboard.declaration.permissionPolicy ?? {})).toEqual([
-        'clipboard-write',
-        'clipboard-read',
-      ]);
-    }
+    expect(Object.keys(clipboard?.declaration.permissionPolicy ?? {})).toEqual([
+      'clipboard-write',
+      'clipboard-read',
+    ]);
   });
 
   it('declares gyroscope, accelerometer, and magnetometer on one card', () => {
     const sensors = CAPABILITY_CATALOG.find((item) => item.id === 'device-sensors');
     expect(sensors?.title).toBe('Read device sensors');
-    expect(sensors?.declaration.kind).toBe('manifest');
-    if (sensors?.declaration.kind === 'manifest') {
-      expect(Object.keys(sensors.declaration.permissionPolicy ?? {})).toEqual([
-        'gyroscope',
-        'accelerometer',
-        'magnetometer',
-      ]);
-    }
+    expect(Object.keys(sensors?.declaration.permissionPolicy ?? {})).toEqual([
+      'gyroscope',
+      'accelerometer',
+      'magnetometer',
+    ]);
   });
 });

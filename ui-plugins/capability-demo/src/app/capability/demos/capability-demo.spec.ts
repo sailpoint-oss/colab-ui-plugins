@@ -13,7 +13,7 @@ describe('CapabilityDemo', () => {
     }).compileComponents();
   });
 
-  it('styles the new-tab link as a button', () => {
+  function newTabFixture() {
     const fixture = TestBed.createComponent(CapabilityDemo);
     fixture.componentRef.setInput(
       'def',
@@ -21,11 +21,96 @@ describe('CapabilityDemo', () => {
     );
     fixture.componentRef.setInput('hostUrl', 'https://acme.identitynow.com/ui/d/mysailpoint');
     fixture.detectChanges();
+    return fixture;
+  }
 
-    const link = fixture.nativeElement.querySelector('a[target="_blank"]') as HTMLAnchorElement;
-    expect(link).toBeTruthy();
-    expect(link.className).toContain('p-button');
-    expect(link.textContent?.trim()).toBe('Open MySailPoint in a new tab');
+  it('opens MySailPoint in a new tab from a button', () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue({ opener: window } as Window);
+    const fixture = newTabFixture();
+
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent?.trim()).toBe('Open MySailPoint in a new tab');
+    button.click();
+    fixture.detectChanges();
+
+    expect(open).toHaveBeenCalledWith('https://acme.identitynow.com/ui/d/mysailpoint', '_blank');
+    expect(fixture.nativeElement.querySelector('.output-error')).toBeNull();
+    open.mockRestore();
+  });
+
+  it('reports a policy error when the sandbox blocks the new tab', () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => {
+      throw new DOMException(
+        "Failed to execute 'open' on 'Window': The opener frame is sandboxed and the 'allow-popups' permission is not set.",
+        'SecurityError',
+      );
+    });
+    const fixture = newTabFixture();
+
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const box = fixture.nativeElement.querySelector('.output-error') as HTMLElement;
+    expect(box.textContent).toContain('Policy blocked');
+    expect(box.textContent).toContain('allow-popups');
+    open.mockRestore();
+  });
+
+  it('reports a policy error when the browser returns no new tab', () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const fixture = newTabFixture();
+
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const box = fixture.nativeElement.querySelector('.output-error') as HTMLElement;
+    expect(box.textContent).toContain('Policy blocked');
+    expect(box.textContent).toContain('allow-popups');
+    open.mockRestore();
+  });
+
+  function dialogFixture() {
+    const fixture = TestBed.createComponent(CapabilityDemo);
+    fixture.componentRef.setInput(
+      'def',
+      CAPABILITY_CATALOG.find((item) => item.id === 'allow-modals'),
+    );
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('reports a policy error when a dialog returns immediately', () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const fixture = dialogFixture();
+
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const box = fixture.nativeElement.querySelector('.output-error') as HTMLElement;
+    expect(box.textContent).toContain('Policy blocked');
+    expect(box.textContent).toContain('allow-modals');
+    vi.restoreAllMocks();
+  });
+
+  it('clears the error when a dialog waits for the user', () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {
+      const start = performance.now();
+      while (performance.now() - start < 120) {
+        // A real dialog blocks until the user responds.
+      }
+    });
+    const fixture = dialogFixture();
+    fixture.componentInstance['result'].set({
+      ok: false,
+      kind: 'policy',
+      message: 'previous',
+    });
+
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.output-error')).toBeNull();
+    vi.restoreAllMocks();
   });
 
   it('offers copy and read buttons on the single clipboard card', () => {

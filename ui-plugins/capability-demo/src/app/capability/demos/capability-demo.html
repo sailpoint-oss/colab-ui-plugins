@@ -10,16 +10,13 @@
 }
 
 @if (def().demo === 'popup-new-tab') {
+  <p-button
+    label="Open MySailPoint in a new tab"
+    [disabled]="hostDemosDisabled()"
+    (onClick)="openMySailPointTab()"
+  />
   @if (hostDemosDisabled()) {
     <p>{{ hostDisabledReason() }}</p>
-  } @else {
-    <a
-      pButton
-      label="Open MySailPoint in a new tab"
-      [href]="hostUrl()"
-      target="_blank"
-      rel="noopener noreferrer"
-    ></a>
   }
 }
 

@@ -40,13 +40,21 @@ describe('App', () => {
     expect(compiled.textContent).not.toContain('List identities');
   });
 
-  it('badges every capability as Default or Opt-in', () => {
+  it('badges every capability as Opt-in', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const badges = fixture.nativeElement.querySelectorAll('p-tag');
     expect(badges.length).toBeGreaterThan(0);
     for (const badge of badges) {
-      expect(['Default', 'Opt-in']).toContain(badge.textContent?.trim());
+      expect(badge.textContent?.trim()).toBe('Opt-in');
     }
+  });
+
+  it('shows a declaration for every capability', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const declarations = fixture.nativeElement.querySelectorAll('details.declare');
+    const cards = fixture.nativeElement.querySelectorAll('app-capability-card');
+    expect(declarations.length).toBe(cards.length);
   });
 });

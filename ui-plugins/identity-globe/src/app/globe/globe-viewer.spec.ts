@@ -495,8 +495,8 @@ describe('GlobeViewer', () => {
       ...fixture.nativeElement.querySelectorAll('.location-tooltip a'),
     ] as HTMLAnchorElement[];
     expect(links).toHaveLength(3);
-    // The App Shell sandbox withholds allow-popups, but the user requested _blank.
-    // Ensure the links use _blank and noopener noreferrer.
+    // _blank links need allow-popups and allow-popups-to-escape-sandbox under
+    // iframeSandbox in sp-ui-plugin.json. Ensure the links use _blank and noopener noreferrer.
     expect(links.every((link) => link.target === '_blank')).toBe(true);
     expect(links.every((link) => link.rel === 'noopener noreferrer')).toBe(true);
 

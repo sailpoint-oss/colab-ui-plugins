@@ -1,5 +1,5 @@
 import { afterNextRender, Component, computed, ElementRef, inject, Injector, input, OnDestroy, signal, viewChild } from '@angular/core';
-import { Button, ButtonDirective } from 'primeng/button';
+import { Button } from 'primeng/button';
 
 import {
   CLIPBOARD_DEMO_TEXT,
@@ -11,6 +11,7 @@ import {
   capabilityErrorLabel,
   classifyCapabilityError,
   NEEDS_HOST_RESULT,
+  POPUP_BLOCKED_RESULT,
   unsupportedResult,
 } from '../capability-error';
 import {
@@ -20,11 +21,12 @@ import {
   type OrientationReading,
 } from '../device-sensors.service';
 import { triggerSampleDownload } from '../download';
+import { callModal, MODAL_BLOCKED_RESULT } from '../modal';
 import { stopMediaStream } from '../media';
 
 @Component({
   selector: 'app-capability-demo',
-  imports: [Button, ButtonDirective],
+  imports: [Button],
   templateUrl: './capability-demo.html',
   styleUrl: './capability-demo.scss',
 })
@@ -146,6 +148,30 @@ export class CapabilityDemo implements OnDestroy {
     return 'Open this plugin inside Identity Security Cloud to try this demo.';
   }
 
+  protected openMySailPointTab(): void {
+    if (this.hostDemosDisabled()) {
+      this.result.set(NEEDS_HOST_RESULT);
+      return;
+    }
+    try {
+      // noopener makes a successful open return null, so detect the block first,
+      // then drop the opener relationship.
+      const popup = window.open(this.hostUrl() as string, '_blank');
+      if (!popup) {
+        this.result.set(POPUP_BLOCKED_RESULT);
+        return;
+      }
+      try {
+        popup.opener = null;
+      } catch {
+        // A cross-origin tab does not allow the opener to be cleared.
+      }
+      this.result.set(null);
+    } catch (err) {
+      this.result.set(classifyCapabilityError(err));
+    }
+  }
+
   protected openMySailPointTop(): void {
     if (this.hostDemosDisabled()) {
       this.result.set(NEEDS_HOST_RESULT);
@@ -171,32 +197,25 @@ export class CapabilityDemo implements OnDestroy {
   }
 
   protected runAlert(): void {
-    try {
-      window.alert('UI Plugin Capability Demo alert');
-    } catch (err) {
-      this.result.set(classifyCapabilityError(err));
-    }
+    this.runModal(() => window.alert('UI Plugin Capability Demo alert'));
   }
 
   protected runConfirm(): void {
-    try {
-      window.confirm('UI Plugin Capability Demo confirm');
-    } catch (err) {
-      this.result.set(classifyCapabilityError(err));
-    }
+    this.runModal(() => window.confirm('UI Plugin Capability Demo confirm'));
   }
 
   protected runPrompt(): void {
-    try {
-      window.prompt('UI Plugin Capability Demo prompt', 'ok');
-    } catch (err) {
-      this.result.set(classifyCapabilityError(err));
-    }
+    this.runModal(() => window.prompt('UI Plugin Capability Demo prompt', 'ok'));
   }
 
   protected runPrint(): void {
+    this.runModal(() => window.print());
+  }
+
+  private runModal(show: () => unknown): void {
     try {
-      window.print();
+      const { shown } = callModal(show);
+      this.result.set(shown ? null : MODAL_BLOCKED_RESULT);
     } catch (err) {
       this.result.set(classifyCapabilityError(err));
     }
