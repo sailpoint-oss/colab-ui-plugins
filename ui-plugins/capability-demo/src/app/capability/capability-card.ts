@@ -18,11 +18,9 @@ export class CapabilityCard {
   readonly def = input.required<CapabilityDef>();
   readonly hostUrl = input<string | null>(null);
 
-  protected code(): string | null {
-    return declarationCode(this.def());
-  }
+  protected readonly badge: CapabilityBadge = capabilityBadge();
 
-  protected badge(): CapabilityBadge {
-    return capabilityBadge(this.def());
+  protected code(): string {
+    return declarationCode(this.def());
   }
 }

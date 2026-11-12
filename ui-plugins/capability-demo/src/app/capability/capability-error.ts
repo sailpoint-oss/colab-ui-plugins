@@ -20,7 +20,7 @@ export const NEEDS_HOST_RESULT: CapabilityResult = {
 export const POPUP_BLOCKED_RESULT: CapabilityResult = {
   ok: false,
   kind: 'policy',
-  message: 'popup blocked or sandbox missing allow-popups',
+  message: 'popup blocked: add allow-popups to iframeSandbox in sp-ui-plugin.json',
 };
 
 export function unsupportedResult(apiName: string): CapabilityResult {

@@ -1,16 +1,23 @@
 # UI Plugin Capability Demo
 
-A SailPoint Identity Security UI plugin that shows what a plugin can do from inside its iframe. Each card names a capability, shows the `iframeAllow` and `permissionPolicy` values you declare to enable it, and gives you a button to run it live.
+A SailPoint Identity Security UI plugin that shows what a plugin can do from inside its iframe. Each card names a capability, shows the `iframeSandbox`, `iframeAllow`, and `permissionPolicy` values you declare to enable it, and gives you a button to run it live.
 
 ![UI Plugin Capability Demo screenshot](docs/screenshot.png)
 
 ## What to expect
 
-Every card should succeed once you grant the browser permission it asks for.
+The App Shell sandboxes every plugin iframe with only `allow-scripts allow-same-origin`. Every other capability is opt-in: the plugin asks for it in `sp-ui-plugin.json`, and the card's **What to declare** section shows exactly what to add. This plugin's manifest declares all of them, so every card should succeed once you grant the browser permission it asks for.
+
+Remove a key from `sp-ui-plugin.json`, run `sail ui-plugins push-manifest`, and reload the plugin to watch that card fail.
+
+| Manifest key | Capabilities |
+|---|---|
+| `iframeSandbox` | `allow-top-navigation`, `allow-popups`, `allow-popups-to-escape-sandbox`, `allow-downloads`, `allow-modals` |
+| `iframeAllow` and `permissionPolicy` | Clipboard, geolocation, camera, microphone, device sensors, fullscreen |
 
 The project demonstrates these capabilities:
 - **Open a link in the same window** (`allow-top-navigation`)
-- **Open a link in a new tab** (`allow-popups`)
+- **Open a link in a new tab** (`allow-popups` and `allow-popups-to-escape-sandbox`)
 - **Download a file** (`allow-downloads`)
 - **Show browser dialogs** (`allow-modals`)
 - **Read from the clipboard** (`clipboard-read`)

@@ -12,6 +12,10 @@
             "sp:scopes:all"
         ],
         "contentSecurityPolicies": {},
+        "iframeSandbox": [
+            "allow-popups",
+            "allow-popups-to-escape-sandbox"
+        ],
         "permissionPolicy": {},
         "iframeAllow": {},
         "state": "ENABLED",

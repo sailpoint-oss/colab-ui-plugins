@@ -1,10 +1,7 @@
 import type { CapabilityDef } from './capability-types';
 
-function hostSandbox(sandboxTokens: string | string[]): CapabilityDef['declaration'] {
-  return {
-    kind: 'host-sandbox',
-    sandboxTokens: Array.isArray(sandboxTokens) ? sandboxTokens : [sandboxTokens],
-  };
+function sandboxGrant(tokens: string | string[]): CapabilityDef['declaration'] {
+  return { iframeSandbox: Array.isArray(tokens) ? tokens : [tokens] };
 }
 
 function manifestPolicy(keys: string | string[]): CapabilityDef['declaration'] {
@@ -14,32 +11,32 @@ function manifestPolicy(keys: string | string[]): CapabilityDef['declaration'] {
     iframeAllow[key] = ["'src'"];
     permissionPolicy[key] = ["'self'"];
   }
-  return { kind: 'manifest', iframeAllow, permissionPolicy };
+  return { iframeAllow, permissionPolicy };
 }
 
 export const CAPABILITY_CATALOG: readonly CapabilityDef[] = [
   {
     id: 'allow-top-navigation',
     title: 'Open a link in the same window',
-    declaration: hostSandbox('allow-top-navigation'),
+    declaration: sandboxGrant('allow-top-navigation'),
     demo: 'top-navigation',
   },
   {
     id: 'open-link-new-tab',
     title: 'Open a link in a new tab',
-    declaration: hostSandbox(['allow-popups', 'allow-popups-to-escape-sandbox']),
+    declaration: sandboxGrant(['allow-popups', 'allow-popups-to-escape-sandbox']),
     demo: 'popup-new-tab',
   },
   {
     id: 'allow-downloads',
     title: 'Download a file',
-    declaration: hostSandbox('allow-downloads'),
+    declaration: sandboxGrant('allow-downloads'),
     demo: 'download',
   },
   {
     id: 'allow-modals',
     title: 'Show browser dialogs',
-    declaration: hostSandbox('allow-modals'),
+    declaration: sandboxGrant('allow-modals'),
     demo: 'modals',
   },
   {
@@ -80,13 +77,12 @@ export const CAPABILITY_CATALOG: readonly CapabilityDef[] = [
   },
 ];
 
-/** The copyable manifest fragment, or null when the App Shell grants the capability. */
-export function declarationCode(def: CapabilityDef): string | null {
-  if (def.declaration.kind === 'host-sandbox') {
-    return null;
-  }
-
+/** The copyable manifest fragment that opts a plugin in to the capability. */
+export function declarationCode(def: CapabilityDef): string {
   const payload: Record<string, unknown> = {};
+  if (def.declaration.iframeSandbox) {
+    payload['iframeSandbox'] = def.declaration.iframeSandbox;
+  }
   if (def.declaration.iframeAllow) {
     payload['iframeAllow'] = def.declaration.iframeAllow;
   }
@@ -101,14 +97,8 @@ export interface CapabilityBadge {
   readonly tooltip: string;
 }
 
-export function capabilityBadge(def: CapabilityDef): CapabilityBadge {
-  if (def.declaration.kind === 'host-sandbox') {
-    const tokens = def.declaration.sandboxTokens.join(' and ');
-    return {
-      label: 'Default',
-      tooltip: `The App Shell already enables this for every plugin (${tokens}). You add nothing to sp-ui-plugin.json.`,
-    };
-  }
+/** Every capability is opt-in: the App Shell grants nothing beyond scripts and same-origin. */
+export function capabilityBadge(): CapabilityBadge {
   return {
     label: 'Opt-in',
     tooltip:

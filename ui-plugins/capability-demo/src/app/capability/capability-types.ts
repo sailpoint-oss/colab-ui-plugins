@@ -10,16 +10,12 @@ export type DemoKind =
   | 'device-sensors'
   | 'fullscreen';
 
-export type Declaration =
-  | {
-      kind: 'host-sandbox';
-      sandboxTokens: string[];
-    }
-  | {
-      kind: 'manifest';
-      iframeAllow?: Record<string, string[]>;
-      permissionPolicy?: Record<string, string[]>;
-    };
+/** The `sp-ui-plugin.json` keys a plugin declares to opt in to a capability. */
+export interface Declaration {
+  iframeSandbox?: string[];
+  iframeAllow?: Record<string, string[]>;
+  permissionPolicy?: Record<string, string[]>;
+}
 
 export interface CapabilityDef {
   id: string;
