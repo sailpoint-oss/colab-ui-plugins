@@ -21,6 +21,12 @@
 | [UI Plugin Capability Demo](ui-plugins/capability-demo) | A plugin that shows each iframe capability a UI plugin can use, with live demos for `iframeSandbox`, `iframeAllow`, and `permissionPolicy`. |
 | [Workflow Launcher Demo](ui-plugins/workflow-launcher-demo) | A plugin that lists the interactive-workflow launchers assigned to you and starts one from inside the iframe. |
 
+## Agent Skills
+
+| Skills | Description |
+|---|---|
+| [UI Plugin Agent Skills](skills) | Skills that teach an AI coding assistant to build, deploy, and verify UI plugins, find the ISC APIs and scopes a plugin needs, and move existing plugins to the SDK's built-in theme sync. Drop them into `.claude/skills/` or read them as Markdown. |
+
 <!-- CONTRIBUTING -->
 ## Contributing
 
